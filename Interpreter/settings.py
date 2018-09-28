@@ -119,6 +119,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+<<<<<<< HEAD:Interpreter/settings.py
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
+=======
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+>>>>>>> 0c10225e8b6780cddeab6eee8280f1fcc983b89c:pl_interpreter_py/Interpreter/settings.py
 ]
