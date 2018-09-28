@@ -2,8 +2,27 @@
 <html>
 <head>
     <title>Interpreter | WebApp</title>
+    {% include "Webapp/includes/css.html" %}
 </head>
 <body>
-    This is from WebApp -> templates -> WebApp -> home.html
+    <div class="wrapper">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <button class="btn btn-outline-success my-2 my-sm-0" id="btnGenerate">Generate</button>
+        </nav>
+        <hr>
+        <div class="row" style="padding: 0 10px 0 10px;">
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <form>
+                    <div class="form-group">
+                        <textarea class="form-control" style="height: 540px; resize: none;" id="exampleInputEmail1" aria-describedby="emailHelp"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <textarea class="form-control" style="height: 540px; resize: none;" id="result" disabled></textarea> 
+            </div>
+        </div>
+    </div>
 </body>
+{% include "Webapp/includes/scripts.html" %}
 </html>

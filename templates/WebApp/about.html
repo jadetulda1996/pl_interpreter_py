@@ -3,10 +3,21 @@
 <html>
 <head>
     <title></title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap/bootstrap.min.css' %}">
 </head>
 <body>
-    <button id="clicking">Click me!</button>
+    <p>
+    This one is from about.html<br><br>
+    below are from different html files.<br>
+    vvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+    </p>
+    {% block interpreter %}
+    {% endblock %}
+
+    {% block result %}
+    {% endblock %}
 </body>
 <script src="{% static 'js/jquery-3.3.1.min.js' %}"type="text/javascript"></script>
+<script src="{% static 'js/bootstrap/bootstrap.min.js' %}"type="text/javascript"></script>
 <script src="{% static 'js/script.js' %}"type="text/javascript"></script>
 </html>
