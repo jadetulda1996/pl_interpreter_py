@@ -5,7 +5,10 @@ def index(request):
     return render(request, 'WebApp/home.html')
 
 def interpreter(request):
-    return render(request, 'WebApp/interpreter.html')
+
+	result = "this is the result"
+	context = {'result':result}
+    return render(request, 'WebApp/home.html', context)
 
 def result(request):
     return render(request, 'WebApp/result.html')

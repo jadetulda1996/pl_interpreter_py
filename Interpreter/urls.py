@@ -15,11 +15,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-<<<<<<< HEAD:Interpreter/urls.py
-=======
-from django.conf.urls.static import static
-from django.conf import settings
->>>>>>> 0c10225e8b6780cddeab6eee8280f1fcc983b89c:pl_interpreter_py/Interpreter/urls.py
 
 urlpatterns = [
     path('admin/', admin.site.urls),
