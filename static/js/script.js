@@ -4,7 +4,8 @@ $('#clicking').on('click', function(){
 
 $('#btnGenerate').on('click', function(){
     //$('#result').html($('#exampleInputEmail1').val());
-    var code = $('#editor').val();    
+    // alert("you clicked the button!");
+    var code = $('#editor').val();
 	$.ajax({
 		type: "GET",
         url: "/interpreter/",
