@@ -8,13 +8,15 @@ datatype = ['INT', 'CHAR', 'BOOL', 'FLOAT']
 def cfpl_tokenize(code):
 	from nltk.tokenize import word_tokenize
 	tokens = word_tokenize(code)
+	#code = code.replace('\n', ' NEWLINE ')
+	#tokens = code.split(' ')
 	print(tokens)
 	return tokens
 
 def cfpl_lexer(tokens):
 	lextoken = list()
 	for token in tokens:
-		lextoken.append(checkTokenType(token)+ ", " + token)
+		lextoken.append(checkTokenType(token) + ":" + token)
 	print(lextoken)
 	return "verify console output for now..."
 
