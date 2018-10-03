@@ -19,5 +19,4 @@ def interpreter(request):
 def result(request):
     return render(request, 'WebApp/result.html')
 
-
 # Create your views here.
