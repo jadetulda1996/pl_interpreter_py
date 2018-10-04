@@ -11,10 +11,10 @@ def interpreter(request):
 	# Tokenizer
 	tokens = api.cfpl_tokenize(message)
 
-	# Lexical analyzer
-	lex = api.cfpl_lexer(tokens)
+	# Parser
+	output = api.cfpl_parse(tokens)
 
-	return HttpResponse(lex)
+	return HttpResponse(output)
 
 def result(request):
 	return render(request, 'WebApp/result.html')
