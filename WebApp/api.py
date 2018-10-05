@@ -6,20 +6,13 @@ assignment_operators = ['=']
 logical_operators = ['AND', 'OR', 'NOT']
 datatype = ['INT', 'CHAR', 'BOOL', 'FLOAT']
 
-def cfpl_tokenize(code):
-	#from nltk.tokenize import word_tokenize
-	#tokens = word_tokenize(code)
-	#code = code.replace('\n', ' NEWLINE ')
+def cfpl_tokenize(code):	
 	statements = code.split('\n')
-	#tokens = re.split(' |\n', code)
 	tokens = list()
 	for statement in statements:
-		#filter all empty elements in the array
-		#filtered = filter(None, statement.split(' ')) 
-		#tokens = cfpl_lexer(filtered)
-		#print(tokens)
-		content = statement.strip()
-		tokens.append(checkStatementType(content) + ':' + content)
+		if(statement):			
+			content = statement.strip()
+			tokens.append(checkStatementType(content) + ':' + content)
 	print(tokens)
 	return "on testing"
 
@@ -35,10 +28,8 @@ def cfpl_parse(statements):
 def checkStatementType(statement):
 	if isComment(statement):
 		return 'COMMENT'
-	elif statement == 'START':
-		return 'START'
-	elif statement == 'STOP':
-		return 'STOP'
+	elif isKeyword(statement):
+		return 'KEYWORD'
 	elif isVarDeclaration(statement):
 		return 'VARDEC'
 	else:
@@ -47,23 +38,16 @@ def checkStatementType(statement):
 def isComment(statement):
 	return True if statement[0][0] == '*' else False
 
-def isVarDeclaration(statement):
-	tokens = statement.split(' ')
-	if tokens[0] == 'VAR':
-		return True
-
 def checkTokenType(token):
 	tokentype = ""
-	if token in keyword:
+	if isKeyword(token):
 		tokentype = "KEYWORD"
-	elif token in datatype:
+	elif isDatatype(token):
 		tokentype = "DATATYPE"
-	elif token in assignment_operators:
+	elif isAssignmentOperator(token):
 		tokentype = "ASSIGNMENT_OPS"
-	elif token in arithmetic_operators:
+	elif isArithmeticOperator(token):
 		tokentype = "ARITHMETIC_OPS"
-	elif token == '\n':
-		tokentype = "NEWLINE"
 	elif isIdentifier(token):
 		tokentype = "INDENTIFIER"
 	elif isDigit(token):
@@ -73,9 +57,31 @@ def checkTokenType(token):
 
 	return tokentype
 
+def isKeyword(token):
+	return token in keyword
+
+def isDatatype(token):
+	return token in datatype
+
+def isAssignmentOperator(token):
+	return token in assignment_operators
+
+def isArithmeticOperator(token):
+	return token in arithmetic_operators
+
 def isIdentifier(token):
-	return re.search('[_a-zA-Z][_a-zA-Z0-9]{0,30}', token)
+	return re.match('[_a-zA-Z][_a-zA-Z0-9]{0,30}', token)
 
 def isDigit(token):
-	return re.search('\d+', token)
+	return re.match('\d+', token)
 
+def isVarDeclaration(statement):
+	# attempt to use regex to validate variable declaration syntax
+	return re.match('^VAR\s[_a-zA-Z]+[0-9]*(=[_a-zA-Z0-9])?(,[_a-zA-Z0-9](=[_a-zA-Z0-9])?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$', statement)
+
+def isVarDeclaration_xxx(statement):
+	tokens = statement.split(' ')
+	if tokens[0] == 'VAR':
+		if tokens[-1] in datatype:
+			if isIdentifier(tokens[1]):
+				return True
