@@ -57,6 +57,10 @@ def isValidStructure(statements):
 			output = "Invalid variable declaration in line " + repr(linenumber)
 			break
 		elif(re.match('^KEYWORD:START$', statement)):
+			if(hasStarted):
+				isValid = False
+				output = "Invalid program structure in line " + repr(linenumber)
+				break
 			hasStarted = True
 			print("went here")
 		else:
