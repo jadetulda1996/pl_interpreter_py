@@ -59,6 +59,7 @@ def isValidStructure(statements):
 				output = "Invalid variable declaration in line " + repr(linenumber)
 				break
 			# more work here for VARDEC
+			processVarDec(statement)
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
 				isValid = False
@@ -70,10 +71,10 @@ def isValidStructure(statements):
 				isValid = False
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
-
+			processoutput(statement)
 			# more work here for OUTPUT
-		else:
-			output = ""
+		#else:
+			#output = ""
 		linenumber += 1
 	return isValid
 
@@ -127,3 +128,23 @@ def isOutput(statement):
 	# validate OUTPUT statement syntax using regex
 	return re.match('^OUTPUT:\s[_a-zA-Z0-9]', statement)
 	
+def processoutput(statement):
+	global output	
+	if(statement):		
+		temp = statement.split(' ')[1:] # we don't need the first element
+		output = dictionary[temp[0]]
+
+def processVarDec(statement):
+	if(statement):
+		temp = statement.split(' ')[1:2]
+		tokens = temp[0].split(',')
+		print(tokens)
+		for token in tokens:
+			if "=" in token:
+				expression = token.split('=')
+				identifier = expression[0]
+				value = expression[1]
+				dictionary.update({identifier:value})
+			else:
+				dictionary.update({token:''})
+		print(dictionary)
