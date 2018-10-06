@@ -1,6 +1,6 @@
 import re
 
-output = "all most there...."
+output = ""
 dictionary = {}
 keyword = ['VAR', 'AS', 'START', 'STOP']
 arithmetic_operators = ['(', ')', '*', '/', '%', '+', '-', '>', '<', '>=', '<=', '==', '<>']
@@ -49,7 +49,6 @@ def isValidStructure(statements):
 	hasStop = False
 	linenumber = 1
 	for statement in statements:
-		print(hasStarted)
 		if(re.match('^INVALID', statement)):	
 			isValid = False		
 			output = "Syntax error in line " + repr(linenumber)
@@ -66,8 +65,13 @@ def isValidStructure(statements):
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
 			hasStarted = True
-		elif(re.match('^OUTPUT', statements)):
-			
+		elif(re.match('^OUTPUT', statement)):
+			if(hasStarted == False):
+				isValid = False
+				output = "Invalid program structure in line " + repr(linenumber)
+				break
+
+			# more work here for OUTPUT
 		else:
 			output = ""
 		linenumber += 1
@@ -109,8 +113,8 @@ def isAssignmentOperator(token):
 def isArithmeticOperator(token):
 	return token in arithmetic_operators
 
-#def isIdentifier(token):
-#	return re.match('[_a-zA-Z][_a-zA-Z0-9]{0,30}', token)
+def isIdentifier(token):
+	return re.match('[_a-zA-Z][_a-zA-Z0-9]{0,30}', token)
 
 def isDigit(token):
 	return re.match('\d+', token)
