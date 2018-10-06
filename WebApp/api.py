@@ -2,25 +2,25 @@ import re
 
 output = "all most there...."
 dictionary = {}
-keyword = ['VAR', 'AS', 'START', 'STOP']
-arithmetic_operators = ['(', ')', '*', '/', '%', '+', '-', '>', '<', '>=', '<=', '==', '<>']
-assignment_operators = ['=']
-logical_operators = ['AND', 'OR', 'NOT']
-datatype = ['INT', 'CHAR', 'BOOL', 'FLOAT']
-identifierSyntax = '([_a-zA-Z]+[0-9]*){1,30}'
+keyword = ["VAR", "AS", "START", "STOP"]
+arithmetic_operators = ["(", ")", "*", "/", "%", "+", "-", ">", "<", ">=", "<=", "==", "<>"]
+assignment_operators = ["="]
+logical_operators = ["AND", "OR", "NOT"]
+datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
+identifierSyntax = "([_a-zA-Z]+[0-9]*){1,30}"
 
 #TODO sample commit
 
 def cfpl_tokenize(code):
 	global output	
-	statements = code.split('\n')
+	statements = code.split("\n")
 	print(statements)
 	tokens = list()
 	for statement in statements:
 		if(statement):			
 			content = statement.strip()
 			# tag each statement
-			tokens.append(getStatementType(content) + ':' + content)
+			tokens.append(getStatementType(content) + ":" + content)
 	print(tokens)
 	return tokens
 
@@ -33,17 +33,17 @@ def cfpl_parse(statements):
 
 def getStatementType(statement):
 	if isComment(statement):
-		return 'COMMENT'
+		return "COMMENT"
 	elif isKeyword(statement):
-		return 'KEYWORD'
+		return "KEYWORD"
 	elif isVarDeclaration(statement):
-		return 'VARDEC'
+		return "VARDEC"
 	elif isOutput(statement):
-		return 'OUTPUT'
+		return "OUTPUT"
 	elif isAssignment(statement):
-		return 'ASSIGNMENT'
+		return "ASSIGNMENT"
 	else:
-		return 'INVALID'
+		return "INVALID"
 
 def isValidStructure(statements):
 	global output
@@ -53,23 +53,23 @@ def isValidStructure(statements):
 	linenumber = 1
 	for statement in statements:
 		print(hasStarted)
-		if(re.match('^INVALID', statement)):	
+		if(re.match("^INVALID", statement)):	
 			isValid = False		
 			output = "Syntax error in line " + repr(linenumber)
 			break
-		elif(re.match('^VARDEC', statement)):
+		elif(re.match("^VARDEC", statement)):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid variable declaration in line " + repr(linenumber)
 				break
 			# more work here for VARDEC
-		elif(re.match('^KEYWORD:START$', statement)):
+		elif(re.match("^KEYWORD:START$", statement)):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
 			hasStarted = True
-		# elif(re.match('^OUTPUT', statements)):			
+		# elif(re.match("^OUTPUT", statements)):			
 		else:
 			output = ""
 		linenumber += 1
@@ -97,11 +97,11 @@ def checkTokenType(token):
 
 def isComment(statement):
 	# returns: COMMENT
-	return re.match('^\*',statement)
+	return re.match("^\*",statement)
 
 def isKeyword(token):
 	#return token in keyword
-	return re.match('^(VAR|AS|START|STOP)$', token)
+	return re.match("^(VAR|AS|START|STOP)$", token)
 
 def isDatatype(token):
 	return token in datatype
@@ -113,28 +113,35 @@ def isArithmeticOperator(token):
 	return token in arithmetic_operators
 
 def isIdentifier(token):
-	# return re.match('[_a-zA-Z][_a-zA-Z0-9]{0,30}', token)
+	# return re.match("[_a-zA-Z][_a-zA-Z0-9]{0,30}", token)
 	return re.match(identiferSyntax, token)
 
 def isDigit(token):
-	return re.match('\d+', token)
+	return re.match("\d+", token)
 
 def isVarDeclaration(statement):
 	# validate variable declaration syntax using regex
-	return re.match('^VAR\s'+identifierSyntax+'(=[_a-zA-Z0-9])?(,( |)'+identifierSyntax+'(=[_a-zA-Z0-9])?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$', statement)
+	return re.match("^VAR\s"+identifierSyntax+"(=[_a-zA-Z0-9]+)(,(\s|)"+identifierSyntax+"(=[_a-zA-Z0-9]+)?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$", statement)
 
 def isOutput(statement):
 	# validate OUTPUT statement syntax using regex
-	return re.match('^OUTPUT:\s[_a-zA-Z0-9]', statement)
+	return re.match("^OUTPUT:\s[_a-zA-Z0-9]", statement)
 	
+def isAssignment(statement):
+	return re.match("^"+identifierSyntax+"(\s|)={1,1}(\s|)(('[_a-zA-Z0-9]*')|"+identifierSyntax+"|[0-9]|expression)+$", statement); #TODO expression to be identified
 
+#valid grammar for expression
+	#arithmetic = number to number relationship | identifier (int | float) to number (vice versa) |
+	#
+
+
+#REGEX SYMBOL GUIDE
 # * 	- 0 or more
 # \s 	- space
 # ?		- 0 or 1
 # +		- 1 or more
 # ^		- starts with
 # $		- end of regex (grammar)
-# {}	- length (min, max)
-
-def isAssignment(statement):
-	return re.match('^'+identifierSyntax+'={1,1}[_a-zA-Z0-9]', statement);
+# {}	- length (min, max) syntax: [pattern]{1,1} -> where [pattern] is grouped
+# []	- range of pattern
+# ()	- capture group
