@@ -14,20 +14,20 @@ identifierSyntax = "([_a-zA-Z]+[0-9]*){1,30}"
 def cfpl_tokenize(code):
 	global output	
 	statements = code.split("\n")
-	print(statements)
+	print("From cfpl_tokenize (data: statements): "+repr(statements))
 	tokens = list()
 	for statement in statements:
 		if(statement):			
 			content = statement.strip()
 			# tag each statement
 			tokens.append(getStatementType(content) + ":" + content)
-	print(tokens)
+	print("From cfpl_tokenize (data: tokens): "+repr(tokens))
 	return tokens
 
 def cfpl_parse(statements):
 	# lets scan
 	if(isValidStructure(statements)):
-		print(statements)
+		print("From cfpl_parse (data: statements): "+repr(statements))
 		# TODO traverse the statement and work on OUTPUT statement
 	return output
 
@@ -42,6 +42,8 @@ def getStatementType(statement):
 		return "OUTPUT"
 	elif isAssignment(statement):
 		return "ASSIGNMENT"
+	elif isArithmeticExpression(statement):
+		return "ARITH_EXP"
 	else:
 		return "INVALID"
 
@@ -62,19 +64,19 @@ def isValidStructure(statements):
 				output = "Invalid variable declaration in line " + repr(linenumber)
 				break
 			# more work here for VARDEC
-			processVarDec(statement)
+			processVarDec(statement)	# <-- this line is out of scope: statement after "break" pls verify is correct
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
-			hasStarted = True
+			hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
 		elif(re.match('^OUTPUT', statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
-			processoutput(statement)
+			processoutput(statement)	# <-- this line is out of scope: statement after "break" pls verify is correct
 			# more work here for OUTPUT
 		linenumber += 1
 	return isValid
@@ -133,16 +135,16 @@ def isOutput(statement):
 	return re.match('^OUTPUT:\s[_a-zA-Z0-9]', statement)
 	
 def processoutput(statement):
-	global output	
+	global output
 	if(statement):		
 		temp = statement.split(' ')[1:] # we don't need the first element
 		output = dictionary[temp[0]]
-		
+
 def processVarDec(statement):
 	if(statement):
 		temp = statement.split(' ')[1:2]
 		tokens = temp[0].split(',')
-		print(tokens)
+		print("From processVarDec (data: tokens): "+repr(tokens))
 		for token in tokens:
 			if "=" in token:
 				expression = token.split('=')
@@ -151,13 +153,13 @@ def processVarDec(statement):
 				dictionary.update({identifier:value})
 			else:
 				dictionary.update({token:''})
-		print(dictionary)
+		print("From processVarDec (data: dictionary): "+repr(dictionary))
 	
 def isAssignment(statement):
-	return re.match("^"+identifierSyntax+"(\s|)={1,1}(\s|)(('[_a-zA-Z0-9]*')|"+identifierSyntax+"|[0-9]|expression)+$", statement); #TODO expression to be identified
+	return re.match("^"+identifierSyntax+"={1,1}(('\w+')|"+identifierSyntax+"|[0-9]|expression)+$", statement); #TODO expression to be identified
 
 def isArithmeticExpression(statement):
-	return re.match("^([a-zA-Z])", statement);
+	return re.match("^(([0-9]+|"+identifierSyntax+")([*/%\+-><(<=)()]{1,1})([0-9]+|"+identifierSyntax+"))$", statement);
 
 #valid grammar for expression
 	#arithmetic = number to number relationship | identifier (int | float) to number (vice versa) |
@@ -165,7 +167,10 @@ def isArithmeticExpression(statement):
 
 #REGEX SYMBOL GUIDE
 # * 	- 0 or more
-# \s 	- space
+# \s 	- [ \t\n\r\f\v] -> matches any whitespace
+# \S 	- [^ \t\n\r\f\v] -> matches any non-whitespace
+# \w    - [_a-zA-Z0-9] matches any alphanumeric
+# \W    - [^a-zA-Z0-9_] matches any non-alphanumeric
 # ?		- 0 or 1
 # +		- 1 or more
 # ^		- starts with
