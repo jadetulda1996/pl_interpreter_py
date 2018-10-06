@@ -52,21 +52,23 @@ def isValidStructure(statements):
 			isValid = False		
 			output = "Syntax error in line " + repr(linenumber)
 			break
-		elif(re.match('^VARDEC', statement) and hasStarted == True):
-			isValid = False
-			output = "Invalid variable declaration in line " + repr(linenumber)
-			break
+		elif(re.match('^VARDEC', statement)):
+			if(hasStarted):
+				isValid = False
+				output = "Invalid variable declaration in line " + repr(linenumber)
+				break
+			# more work here for VARDEC
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
 			hasStarted = True
-			print("went here")
+		elif(re.match('^OUTPUT', statements)):
+			
 		else:
 			output = ""
 		linenumber += 1
-	#print(output)
 	return isValid
 
 
