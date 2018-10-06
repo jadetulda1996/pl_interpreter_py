@@ -1,4 +1,5 @@
 import re
+from process import *
 
 output = ""
 dictionary = {}
@@ -8,8 +9,6 @@ assignment_operators = ["="]
 logical_operators = ["AND", "OR", "NOT"]
 datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
 identifierSyntax = "([_a-zA-Z]+[0-9]*){1,30}"
-
-#TODO sample commit
 
 def cfpl_tokenize(code):
 	global output	
@@ -62,19 +61,26 @@ def isValidStructure(statements):
 				output = "Invalid variable declaration in line " + repr(linenumber)
 				break
 			# more work here for VARDEC
-			processVarDec(statement)
+			process_vardec(statement)
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
 				isValid = False
-				output = "Invalid program structure in line " + repr(linenumber)
+				output = "Invalid start statement in line " + repr(linenumber)
 				break
 			hasStarted = True
 		elif(re.match('^OUTPUT', statement)):
 			if(hasStarted == False):
 				isValid = False
-				output = "Invalid program structure in line " + repr(linenumber)
+				output = "Invalid output statement in line " + repr(linenumber)
 				break
-			processoutput(statement)
+			process_output(statement)
+			# more work here for OUTPUT
+		elif(re.match('^ASSIGNMENT', statement)):
+			if(hasStarted == False):
+				isValid = False
+				output = "Invalid assignment statement in line " + repr(linenumber)
+				break
+			process_assignment(statement)
 			# more work here for OUTPUT
 		linenumber += 1
 	return isValid
@@ -125,19 +131,19 @@ def isDigit(token):
 
 def isVarDeclaration(statement):
 	# validate variable declaration syntax using regex
-	return re.match("^VAR\s"+identifierSyntax+"(=[_a-zA-Z0-9]+)(,(\s|)"+identifierSyntax+"(=[_a-zA-Z0-9]+)?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$", statement)
+	return re.match("^VAR\s"+identifierSyntax+"(=[_a-zA-Z0-9]+)*(,(\s|)"+identifierSyntax+"(=[_a-zA-Z0-9]+)?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$", statement)
 
 def isOutput(statement):
 	# validate OUTPUT statement syntax using regex
 	return re.match('^OUTPUT:\s[_a-zA-Z0-9]', statement)
 	
-def processoutput(statement):
+def process_output(statement):
 	global output	
 	if(statement):		
 		temp = statement.split(' ')[1:] # we don't need the first element
 		output = dictionary[temp[0]]
 
-def processVarDec(statement):
+def process_vardec(statement):
 	if(statement):
 		temp = statement.split(' ')[1:2]
 		tokens = temp[0].split(',')
@@ -151,6 +157,11 @@ def processVarDec(statement):
 			else:
 				dictionary.update({token:''})
 		print(dictionary)
+
+def process_assignment(statement):
+	if(statement):
+		temp = statement.split(' ')[1:]
+		print(temp)
 	
 def isAssignment(statement):
 	return re.match("^"+identifierSyntax+"(\s|)={1,1}(\s|)(('[_a-zA-Z0-9]*')|"+identifierSyntax+"|[0-9]|expression)+$", statement); #TODO expression to be identified
