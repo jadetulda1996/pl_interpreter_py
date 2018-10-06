@@ -1,6 +1,6 @@
 import re
 
-output = "all most there...."
+output = ""
 dictionary = {}
 keyword = ["VAR", "AS", "START", "STOP"]
 arithmetic_operators = ["(", ")", "*", "/", "%", "+", "-", ">", "<", ">=", "<=", "==", "<>"]
@@ -52,8 +52,12 @@ def isValidStructure(statements):
 	hasStop = False
 	linenumber = 1
 	for statement in statements:
+<<<<<<< HEAD
 		print(hasStarted)
 		if(re.match("^INVALID", statement)):	
+=======
+		if(re.match('^INVALID', statement)):	
+>>>>>>> 8bba0ff697ab438373234c5b64b298df4727e1f4
 			isValid = False		
 			output = "Syntax error in line " + repr(linenumber)
 			break
@@ -69,7 +73,17 @@ def isValidStructure(statements):
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
 			hasStarted = True
+<<<<<<< HEAD
 		# elif(re.match("^OUTPUT", statements)):			
+=======
+		elif(re.match('^OUTPUT', statement)):
+			if(hasStarted == False):
+				isValid = False
+				output = "Invalid program structure in line " + repr(linenumber)
+				break
+
+			# more work here for OUTPUT
+>>>>>>> 8bba0ff697ab438373234c5b64b298df4727e1f4
 		else:
 			output = ""
 		linenumber += 1
@@ -113,8 +127,12 @@ def isArithmeticOperator(token):
 	return token in arithmetic_operators
 
 def isIdentifier(token):
+<<<<<<< HEAD
 	# return re.match("[_a-zA-Z][_a-zA-Z0-9]{0,30}", token)
 	return re.match(identiferSyntax, token)
+=======
+	return re.match('[_a-zA-Z][_a-zA-Z0-9]{0,30}', token)
+>>>>>>> 8bba0ff697ab438373234c5b64b298df4727e1f4
 
 def isDigit(token):
 	return re.match("\d+", token)
