@@ -8,6 +8,8 @@ assignment_operators = ['=']
 logical_operators = ['AND', 'OR', 'NOT']
 datatype = ['INT', 'CHAR', 'BOOL', 'FLOAT']
 
+#TODO sample commit
+
 def cfpl_tokenize(code):
 	global output	
 	statements = code.split('\n')
