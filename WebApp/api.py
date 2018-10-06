@@ -7,6 +7,7 @@ arithmetic_operators = ['(', ')', '*', '/', '%', '+', '-', '>', '<', '>=', '<=',
 assignment_operators = ['=']
 logical_operators = ['AND', 'OR', 'NOT']
 datatype = ['INT', 'CHAR', 'BOOL', 'FLOAT']
+identifierSyntax = '([_a-zA-Z]+[0-9]*){1,30}'
 
 #TODO sample commit
 
@@ -39,6 +40,8 @@ def getStatementType(statement):
 		return 'VARDEC'
 	elif isOutput(statement):
 		return 'OUTPUT'
+	elif isAssignment(statement):
+		return 'ASSIGNMENT'
 	else:
 		return 'INVALID'
 
@@ -66,8 +69,7 @@ def isValidStructure(statements):
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
 			hasStarted = True
-		elif(re.match('^OUTPUT', statements)):
-			
+		# elif(re.match('^OUTPUT', statements)):			
 		else:
 			output = ""
 		linenumber += 1
@@ -87,14 +89,15 @@ def checkTokenType(token):
 	elif isIdentifier(token):
 		tokentype = "INDENTIFIER"
 	elif isDigit(token):
-		tokentype = "DIGIT"	
+		tokentype = "DIGIT"
 	else:
 		tokentype = "INVALID"
 
 	return tokentype
 
 def isComment(statement):
-	return True if statement[0][0] == '*' else False
+	# returns: COMMENT
+	return re.match('^\*',statement)
 
 def isKeyword(token):
 	#return token in keyword
@@ -109,17 +112,29 @@ def isAssignmentOperator(token):
 def isArithmeticOperator(token):
 	return token in arithmetic_operators
 
-#def isIdentifier(token):
-#	return re.match('[_a-zA-Z][_a-zA-Z0-9]{0,30}', token)
+def isIdentifier(token):
+	# return re.match('[_a-zA-Z][_a-zA-Z0-9]{0,30}', token)
+	return re.match(identiferSyntax, token)
 
 def isDigit(token):
 	return re.match('\d+', token)
 
 def isVarDeclaration(statement):
 	# validate variable declaration syntax using regex
-	return re.match('^VAR\s[_a-zA-Z]+[0-9]*(=[_a-zA-Z0-9])?(,[_a-zA-Z0-9](=[_a-zA-Z0-9])?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$', statement)
+	return re.match('^VAR\s'+identifierSyntax+'(=[_a-zA-Z0-9])?(,( |)'+identifierSyntax+'(=[_a-zA-Z0-9])?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$', statement)
 
 def isOutput(statement):
 	# validate OUTPUT statement syntax using regex
 	return re.match('^OUTPUT:\s[_a-zA-Z0-9]', statement)
 	
+
+# * 	- 0 or more
+# \s 	- space
+# ?		- 0 or 1
+# +		- 1 or more
+# ^		- starts with
+# $		- end of regex (grammar)
+# {}	- length (min, max)
+
+def isAssignment(statement):
+	return re.match('^'+identifierSyntax+'={1,1}[_a-zA-Z0-9]', statement);
