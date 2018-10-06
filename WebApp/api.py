@@ -152,7 +152,6 @@ def isAssignment(statement):
 	#arithmetic = number to number relationship | identifier (int | float) to number (vice versa) |
 	#
 
-
 #REGEX SYMBOL GUIDE
 # * 	- 0 or more
 # \s 	- space
