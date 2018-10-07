@@ -80,6 +80,10 @@ def isValidStructure(statements):
 				break
 			processoutput(statement)	# <-- this line is out of scope: statement after "break" pls verify is correct
 			# more work here for OUTPUT
+		else:
+			output = ""
+			continue
+
 		linenumber += 1
 	return isValid
 
@@ -121,7 +125,7 @@ def isArithmeticOperator(token):
 	return token in arithmetic_operators
 
 def isIdentifier(token):
-	return re.match(identiferSyntax, token)
+	return re.match(identifierSyntax, token)
 
 def isDigit(token):
 	return re.match("\d+", token)
@@ -159,13 +163,22 @@ def isAssignment(statement):
 	return re.match("^"+identifierSyntax+"=(('\w+')|"+identifierSyntax+"|\d|expression)+$", statement); #TODO expression to be identified
 
 def isArithmeticExpression(statement):
+	digitOrIdentifer	= identifierSyntax+"|(\-?\d*\.?\d+)"
+	ops 				= arithOps_regex+"{1}"
+	return re.match("^(("+digitOrIdentifer+")"+ops+"("+digitOrIdentifer+"))+$",statement)
 	# regex pattern composition:
 		# ^								=> start
 		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)
 		# arithOps_regex ([\+\-\*\/\%])	=> single operator only
 		# $								=> end
 
-	return re.match("^(\-?(\d*\.?\d+)"+arithOps_regex+"{1}(\-?\d*\.?\d+))+$",statement)
+	# sample data:
+		# 1+a10.
+		# -1+-1
+		# 0.1-1
+		# a+1
+		# 1+a
+
 
 #REGEX SYMBOL GUIDE
 # * 	- 0 or more
