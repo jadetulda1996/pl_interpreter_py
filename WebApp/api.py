@@ -10,6 +10,7 @@ datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
 identifierSyntax = "([_a-zA-Z]+\d*){1,30}"
 arithOps_regex = "[\+\-\*\/\%]"
 optNegSign = "[\-\+]?"
+posOrNeg = "(\-?\d*\.?\d+)"
 
 #TODO sample commit
 
@@ -132,7 +133,11 @@ def isDigit(token):
 
 def isVarDeclaration(statement):
 	# validate variable declaration syntax using regex
-	return re.match("^VAR\s"+identifierSyntax+"(=\w+)?(,(\s|)"+identifierSyntax+"(=\w+)?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$", statement)
+	varDec 	= "VAR\s"+identifierSyntax+"(=\w+)?(,(\s|)"+identifierSyntax+"(=\w+)?)*\s"
+	varType	= "AS\s(INT|CHAR|BOOL|FLOAT)"
+	regPattern = "^"+varDec+varType+"$"
+	
+	return re.match(regPattern, statement)
 
 def isOutput(statement):
 	# validate OUTPUT statement syntax using regex
@@ -160,14 +165,31 @@ def processVarDec(statement):
 		print("From processVarDec (data: dictionary): "+repr(dictionary))
 	
 def isAssignment(statement):
-	return re.match("^"+identifierSyntax+"=(('\w+')|"+identifierSyntax+"|\d|expression)+$", statement); #TODO expression to be identified
+	allowedData 			= "('\w+')|"+identifierSyntax+"|"+posOrNeg
+	firstAssignment			= identifierSyntax+"={1}("+allowedData+")"
+	addtnAssignment_opt		= "(={1}("+allowedData+"))*"
+	regPattern				= "^"+firstAssignment+addtnAssignment_opt+"$"
+
+	return re.match(regPattern,statement)
+	#TODO fix bug (for multiple assignment, "=" must only followed to an identifier)
+
+	#Note: Check variable declaration on top
+
+	#sample data:
+		# 1=1 or '1'=1 or 1=a		=> error: can't assign value to a non-identifier
+		# a=1 or a=a or a=-1		=> success: identifier = data(+ or -) or identifier
+		# a==a 						=> error: is not an assignment operator
+
 
 def isArithmeticExpression(statement):
-	digitOrIdentifer	= identifierSyntax+"|(\-?\d*\.?\d+)"
+	digitOrIdentifer	= identifierSyntax+"|"+posOrNeg
 	ops 				= arithOps_regex+"{1}"
 	firstExp			= "("+digitOrIdentifer+")+"+ops+"("+digitOrIdentifer+")+"
 	addtnExp_opt		= "("+ops+"("+digitOrIdentifer+")+)*"
-	return re.match("^"+firstExp+addtnExp_opt+"$",statement)
+	regPattern			= "^"+firstExp+addtnExp_opt+"$"
+
+	return re.match(regPattern,statement)
+
 	# regex pattern composition:
 		# ^								=> start
 		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)
