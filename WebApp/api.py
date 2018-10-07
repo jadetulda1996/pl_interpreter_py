@@ -159,7 +159,7 @@ def isAssignment(statement):
 	return re.match("^"+identifierSyntax+"={1,1}(('\w+')|"+identifierSyntax+"|[0-9]|expression)+$", statement); #TODO expression to be identified
 
 def isArithmeticExpression(statement):
-	return re.match("^(([0-9]+|"+identifierSyntax+")([*/%\+-><(<=)()]{1,1})([0-9]+|"+identifierSyntax+"))$", statement);
+	return re.match("^(([0-9]+|"+identifierSyntax+")([*/%\+-><]{1,1})([0-9]+|"+identifierSyntax+"))$", statement);
 
 #valid grammar for expression
 	#arithmetic = number to number relationship | identifier (int | float) to number (vice versa) |
