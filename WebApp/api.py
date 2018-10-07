@@ -165,7 +165,9 @@ def isAssignment(statement):
 def isArithmeticExpression(statement):
 	digitOrIdentifer	= identifierSyntax+"|(\-?\d*\.?\d+)"
 	ops 				= arithOps_regex+"{1}"
-	return re.match("^(("+digitOrIdentifer+")"+ops+"("+digitOrIdentifer+"))+$",statement)
+	firstExp			= "("+digitOrIdentifer+")+"+ops+"("+digitOrIdentifer+")+"
+	addtnExp_opt		= "("+ops+"("+digitOrIdentifer+")+)*"
+	return re.match("^"+firstExp+addtnExp_opt+"$",statement)
 	# regex pattern composition:
 		# ^								=> start
 		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)
@@ -173,11 +175,11 @@ def isArithmeticExpression(statement):
 		# $								=> end
 
 	# sample data:
-		# 1+a10.
-		# -1+-1
-		# 0.1-1
-		# a+1
-		# 1+a
+		# 1+a10.			=> error: has "." on last statement
+		# -1+-1				=> success: negative + negative
+		# 0.1-1				=> success: (+)decimal - (+)
+		# a+1 or 1+a		=> success: identifier + number (and vice versa)
+		# a+2+4+1--0.1		=> success: can detect multiple operation
 
 
 #REGEX SYMBOL GUIDE
