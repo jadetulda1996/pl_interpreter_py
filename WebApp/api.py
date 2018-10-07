@@ -7,7 +7,9 @@ arithmetic_operators = ["(", ")", "*", "/", "%", "+", "-", ">", "<", ">=", "<=",
 assignment_operators = ["="]
 logical_operators = ["AND", "OR", "NOT"]
 datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
-identifierSyntax = "([_a-zA-Z]+[0-9]*){1,30}"
+identifierSyntax = "([_a-zA-Z]+\d*){1,30}"
+arithOps_regex = "[\+\-\*\/\%]"
+optNegSign = "[\-\+]?"
 
 #TODO sample commit
 
@@ -54,7 +56,7 @@ def isValidStructure(statements):
 	hasStop = False
 	linenumber = 1
 	for statement in statements:
-		if(re.match('^INVALID', statement)):
+		if(re.match("^INVALID", statement)):
 			isValid = False		
 			output = "Syntax error in line " + repr(linenumber)
 			break
@@ -65,13 +67,13 @@ def isValidStructure(statements):
 				break
 			# more work here for VARDEC
 			processVarDec(statement)	# <-- this line is out of scope: statement after "break" pls verify is correct
-		elif(re.match('^KEYWORD:START$', statement)):
+		elif(re.match("^KEYWORD:START$", statement)):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid program structure in line " + repr(linenumber)
 				break
 			hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
-		elif(re.match('^OUTPUT', statement)):
+		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid program structure in line " + repr(linenumber)
@@ -119,7 +121,6 @@ def isArithmeticOperator(token):
 	return token in arithmetic_operators
 
 def isIdentifier(token):
-	# return re.match("[_a-zA-Z][_a-zA-Z0-9]{0,30}", token)
 	return re.match(identiferSyntax, token)
 
 def isDigit(token):
@@ -127,12 +128,11 @@ def isDigit(token):
 
 def isVarDeclaration(statement):
 	# validate variable declaration syntax using regex
-	# return re.match('^VAR\s[_a-zA-Z]+[0-9]*(=[_a-zA-Z0-9])?(,[_a-zA-Z0-9](=[_a-zA-Z0-9])?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$', statement)
-	return re.match("^VAR\s"+identifierSyntax+"(=[_a-zA-Z0-9]+)?(,(\s|)"+identifierSyntax+"(=[_a-zA-Z0-9]+)?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$", statement)
+	return re.match("^VAR\s"+identifierSyntax+"(=\w+)?(,(\s|)"+identifierSyntax+"(=\w+)?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$", statement)
 
 def isOutput(statement):
 	# validate OUTPUT statement syntax using regex
-	return re.match('^OUTPUT:\s[_a-zA-Z0-9]', statement)
+	return re.match('^OUTPUT:\s\w', statement)
 	
 def processoutput(statement):
 	global output
@@ -156,14 +156,16 @@ def processVarDec(statement):
 		print("From processVarDec (data: dictionary): "+repr(dictionary))
 	
 def isAssignment(statement):
-	return re.match("^"+identifierSyntax+"={1,1}(('\w+')|"+identifierSyntax+"|[0-9]|expression)+$", statement); #TODO expression to be identified
+	return re.match("^"+identifierSyntax+"=(('\w+')|"+identifierSyntax+"|\d|expression)+$", statement); #TODO expression to be identified
 
 def isArithmeticExpression(statement):
-	return re.match("^(([0-9]+|"+identifierSyntax+")([*/%\+-><]{1,1})([0-9]+|"+identifierSyntax+"))$", statement);
+	# regex pattern composition:
+		# ^								=> start
+		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)
+		# arithOps_regex ([\+\-\*\/\%])	=> single operator only
+		# $								=> end
 
-#valid grammar for expression
-	#arithmetic = number to number relationship | identifier (int | float) to number (vice versa) |
-	#
+	return re.match("^(\-?(\d*\.?\d+)"+arithOps_regex+"{1}(\-?\d*\.?\d+))+$",statement)
 
 #REGEX SYMBOL GUIDE
 # * 	- 0 or more
@@ -171,6 +173,7 @@ def isArithmeticExpression(statement):
 # \S 	- [^ \t\n\r\f\v] -> matches any non-whitespace
 # \w    - [_a-zA-Z0-9] matches any alphanumeric
 # \W    - [^a-zA-Z0-9_] matches any non-alphanumeric
+# \d 	- [0-9] matches number
 # ?		- 0 or 1
 # +		- 1 or more
 # ^		- starts with
