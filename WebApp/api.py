@@ -1,5 +1,4 @@
 import re
-from process import *
 
 output = ""
 dictionary = {}
@@ -85,7 +84,6 @@ def isValidStructure(statements):
 		linenumber += 1
 	return isValid
 
-
 def checkTokenType(token):
 	tokentype = ""
 	if isKeyword(token):
@@ -131,7 +129,8 @@ def isDigit(token):
 
 def isVarDeclaration(statement):
 	# validate variable declaration syntax using regex
-	return re.match("^VAR\s"+identifierSyntax+"(=[_a-zA-Z0-9]+)*(,(\s|)"+identifierSyntax+"(=[_a-zA-Z0-9]+)?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$", statement)
+	# return re.match('^VAR\s[_a-zA-Z]+[0-9]*(=[_a-zA-Z0-9])?(,[_a-zA-Z0-9](=[_a-zA-Z0-9])?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$', statement)
+	return re.match("^VAR\s"+identifierSyntax+"(=[_a-zA-Z0-9]+)?(,(\s|)"+identifierSyntax+"(=[_a-zA-Z0-9]+)?)*\sAS\s(INT|CHAR|BOOL|FLOAT)$", statement)
 
 def isOutput(statement):
 	# validate OUTPUT statement syntax using regex
@@ -142,7 +141,7 @@ def process_output(statement):
 	if(statement):		
 		temp = statement.split(' ')[1:] # we don't need the first element
 		output = dictionary[temp[0]]
-
+		
 def process_vardec(statement):
 	if(statement):
 		temp = statement.split(' ')[1:2]
@@ -165,6 +164,9 @@ def process_assignment(statement):
 	
 def isAssignment(statement):
 	return re.match("^"+identifierSyntax+"(\s|)={1,1}(\s|)(('[_a-zA-Z0-9]*')|"+identifierSyntax+"|[0-9]|expression)+$", statement); #TODO expression to be identified
+
+def isArithmeticExpression(statement):
+	return re.match("^([a-zA-Z])", statement);
 
 #valid grammar for expression
 	#arithmetic = number to number relationship | identifier (int | float) to number (vice versa) |
