@@ -58,7 +58,7 @@ def isDigit(token):
 
 def isVarDeclaration(statement):
 	# validate variable declaration syntax using regex
-	varDec 	= "VAR\s"+identifierSyntax+"(=\w+)?(,(\s|)"+identifierSyntax+"(=\w+)?)*\s"
+	varDec 	= "VAR\s"+identifierSyntax+"(\s*=\s*\w+)?(,(\s|)"+identifierSyntax+"(\s*=\s*\w+)?)*\s"
 	varType	= "AS\s(INT|CHAR|BOOL|FLOAT)"
 	regPattern = "^"+varDec+varType+"$"
 	

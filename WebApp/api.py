@@ -78,8 +78,7 @@ def parseStatement(statements):
 				output = "Invalid assignment statement in line " + repr(linenumber)
 				break
 			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
-		else:
-			continue
+		
 		linenumber += 1
 	return isValid
 
@@ -90,7 +89,7 @@ def process_output(statement):
 		output = dictionary[temp[0]]
 		
 def process_vardec(statement):
-	global output	
+	global dictionary
 	if(statement):
 		temp = statement.split(' ')[1:2]
 		tokens = temp[0].split(',')
@@ -100,15 +99,20 @@ def process_vardec(statement):
 				expression = token.split('=')
 				identifier = expression[0]
 				value = expression[1]
-				dictionary.update({identifier:value})
+				dictionary[identifier] = value
 			else:
-				dictionary.update({token:''})
+				dictionary[token] = ''
 		print(dictionary)
 
-def process_assignment(statement):
+def process_assignment(statement):	
+	global dictionary
 	if(statement):
-		temp = statement.split(' ')[1:]
-		print(temp)
+		temp = statement.split('ASSIGNMENT:')[1:] #remove assignment tag
+		tokens = temp[0].split('=')
+		identifier = tokens[0].strip() # element before the '=' operation
+		value = tokens[1].strip() # element after the '=' operator
+		dictionary[identifier] = value
+		print(dictionary)
 
 
 #REGEX SYMBOL GUIDE
