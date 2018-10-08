@@ -58,16 +58,17 @@ def parseStatement(statements):
 				break
 			# more work here for VARDEC
 			process_vardec(statement)
+
 			if(hasStarted):
 				isValid = False
 				output = "Invalid start statement in line " + repr(linenumber)
 				break
 				
 			output = ""
-			continue
+
 		elif(re.match('^KEYWORD:START$', statement)):
 			hasStarted = True
-			continue
+
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
 				isValid = False
@@ -75,17 +76,16 @@ def parseStatement(statements):
 				break
 				
 			output = ""
-			continue
 			process_output(statement)
 			# more work here for OUTPUT
-		elif(re.match('^ASSIGNMENT', statement)): # TODO: <-- fix this area
+
+		elif(re.match('^ASSIGNMENT', statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid assignment statement in line " + repr(linenumber)
 				break
 				
 			output = ""
-			continue
 			process_assignment(statement)
 
 		linenumber += 1
@@ -117,7 +117,7 @@ def process_vardec(statement):
 				dictionary[identifier] = value
 			else:
 				dictionary[token] = ''
-
+		print(temp)
 		print("Dictionary content after process_vardec : " + repr(dictionary))
 
 def process_assignment(statement):	
