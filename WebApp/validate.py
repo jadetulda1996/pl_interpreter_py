@@ -58,8 +58,10 @@ def isDigit(token):
 
 def isVarDeclaration(statement):
 	# allow spaces between identifiers and/or its values
-	varDec 	= "VAR\s"+identifierSyntax+"(\s*=\s*\w+)?(\s*,\s*"+identifierSyntax+"(\s*=\s*\w+)?)*\s"
-	varType	= "AS\s(INT|CHAR|BOOL|FLOAT)"
+	requiredDec 	= "VAR\s"+identifierSyntax
+	optDec			= "(\s*=\s*\w+)?(\s*,\s*"+identifierSyntax+"(\s*=\s*\w+)?)*\s"
+	varDec 			= requiredDec+optDec
+	varType			= "AS\s(INT|CHAR|BOOL|FLOAT)"
 	regPattern = "^"+varDec+varType+"$"
 	
 	return re.match(regPattern, statement)

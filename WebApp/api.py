@@ -50,6 +50,7 @@ def parseStatement(statements):
 			isValid = False		
 			output = "Syntax error in line " + repr(linenumber)
 			break
+
 		elif(re.match("^VARDEC", statement)):
 			if(hasStarted):
 				isValid = False
@@ -61,23 +62,32 @@ def parseStatement(statements):
 				isValid = False
 				output = "Invalid start statement in line " + repr(linenumber)
 				break
+				
+			output = ""
+			continue
 		elif(re.match('^KEYWORD:START$', statement)):
-			hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
+			hasStarted = True
 			continue
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid output statement in line " + repr(linenumber)
 				break
+				
+			output = ""
+			continue
 			process_output(statement)
 			# more work here for OUTPUT
-		elif(re.match('^ASSIGNMENT', statement)):
+		elif(re.match('^ASSIGNMENT', statement)): # TODO: <-- fix this area
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid assignment statement in line " + repr(linenumber)
 				break
-			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
-		
+				
+			output = ""
+			continue
+			process_assignment(statement)
+
 		linenumber += 1
 	return isValid
 
