@@ -57,8 +57,8 @@ def isDigit(token):
 	return re.match("\d+", token)
 
 def isVarDeclaration(statement):
-	# validate variable declaration syntax using regex
-	varDec 	= "VAR\s"+identifierSyntax+"(\s*=\s*\w+)?(,(\s|)"+identifierSyntax+"(\s*=\s*\w+)?)*\s"
+	# allow spaces between identifiers and/or its values
+	varDec 	= "VAR\s"+identifierSyntax+"(\s*=\s*\w+)?(\s*,\s*"+identifierSyntax+"(\s*=\s*\w+)?)*\s"
 	varType	= "AS\s(INT|CHAR|BOOL|FLOAT)"
 	regPattern = "^"+varDec+varType+"$"
 	

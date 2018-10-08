@@ -19,9 +19,8 @@ def cfpl_tokenize(code):
 
 def cfpl_parse(statements):
 	# lets scan
-	if(parseStatement(statements)):
-		print("From cfpl_parse (data: statements): "+repr(statements))
-		# TODO traverse the statement and work on OUTPUT statement
+	dictionary.clear()
+	parseStatement(statements)
 	return output
 
 def getStatementType(statement):
@@ -83,36 +82,49 @@ def parseStatement(statements):
 	return isValid
 
 def process_output(statement):
-	global output	
+	global output
+	global dictionary	
 	if(statement):		
-		temp = statement.split(' ')[1:] # we don't need the first element
-		output = dictionary[temp[0]]
-		
+		temp = re.sub("OUTPUT:", "", statement).strip()
+		if temp in dictionary.keys():
+			output = dictionary[temp]
+		else:
+			output = "Error : Unspecified variable : " + repr(temp)
+
 def process_vardec(statement):
 	global dictionary
-	if(statement):
-		temp = statement.split(' ')[1:2]
-		tokens = temp[0].split(',')
+	if(statement):	
+		# remove specified text from the string instead of using split
+		temp = re.sub("VARDEC:VAR|AS|INT|CHAR|BOOL|FLOAT", "", statement).strip()
+		# now only relevant text remains, lets split
+		tokens = temp.split(',')
 		print("From processVarDec (data: tokens): "+repr(tokens))
 		for token in tokens:
 			if "=" in token:
 				expression = token.split('=')
-				identifier = expression[0]
-				value = expression[1]
+				identifier = expression[0].strip()
+				value = expression[1].strip()
 				dictionary[identifier] = value
 			else:
 				dictionary[token] = ''
-		print(dictionary)
+
+		print("Dictionary content after process_vardec : " + repr(dictionary))
 
 def process_assignment(statement):	
+	global output
 	global dictionary
 	if(statement):
-		temp = statement.split('ASSIGNMENT:')[1:] #remove assignment tag
-		tokens = temp[0].split('=')
+		#temp = statement.split('ASSIGNMENT:')[1:] #remove assignment tag
+		temp = re.sub("ASSIGNMENT:", "", statement).strip()
+		tokens = temp.split('=')
 		identifier = tokens[0].strip() # element before the '=' operation
 		value = tokens[1].strip() # element after the '=' operator
-		dictionary[identifier] = value
-		print(dictionary)
+		if identifier in dictionary.keys():
+			dictionary[identifier] = value
+		else:
+			output = "Error : Unspecified variable : " + repr(identifier)
+
+		print("Dictionary content after process_assignment : " + repr(dictionary))
 
 
 #REGEX SYMBOL GUIDE
