@@ -7,8 +7,7 @@ logical_operators = ["AND", "OR", "NOT"]
 datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
 identifierSyntax = "([_a-zA-Z]+\d*){1,30}"
 arithOps_regex = "[\+\-\*\/\%]"
-optNegSign = "[\-\+]?"
-posOrNeg = "(\-?\d*\.?\d+)"
+number = "(\-?\d*\.?\d+)"
 
 def checkTokenType(token):
 	tokentype = ""
@@ -67,11 +66,18 @@ def isVarDeclaration(statement):
 	return re.match(regPattern, statement)
 
 def isAssignment(statement):
-	allowedData 			= "('\w+')|"+identifierSyntax+"|"+posOrNeg
+	temp = statement
+	tokens = temp.split('=')
+	identifier = tokens[0].strip() # element before the '=' operation
+	value = tokens[1].strip() # element after the '=' operator
+	
+	if(isArithmeticExpression(value)):
+		return True
+
+	allowedData 			= "('\w+')|"+identifierSyntax+"|"+number+"|"
 	firstAssignment			= identifierSyntax+"\s*={1}\s*("+allowedData+")"
 	addtnAssignment_opt		= "(={1}("+allowedData+"))*"
 	regPattern				= "^"+firstAssignment+addtnAssignment_opt+"$"
-
 	return re.match(regPattern,statement)
 	#TODO fix bug (for multiple assignment, "=" must only followed to an identifier)
 
@@ -83,13 +89,16 @@ def isAssignment(statement):
 		# a==a 						=> error: is not an assignment operator
 
 def isArithmeticExpression(statement):
-	digitOrIdentifer	= identifierSyntax+"|"+posOrNeg
+	print("statement from isAssignment: "+repr(statement))
+	digitOrIdentifer	= "("+identifierSyntax+"|"+number+")"
 	ops 				= arithOps_regex+"{1}"
-	firstExp			= "("+digitOrIdentifer+")+"+ops+"("+digitOrIdentifer+")+"
-	addtnExp_opt		= "("+ops+"("+digitOrIdentifer+")+)*"
+	firstExp			= digitOrIdentifer+ops+digitOrIdentifer
+	addtnExp_opt		= "("+ops+digitOrIdentifer+")*"
 	regPattern			= "^"+firstExp+addtnExp_opt+"$"
 
+	# print(re.match(regPattern,statement))
 	return re.match(regPattern,statement)
+
 
 	# regex pattern composition:
 		# ^								=> start

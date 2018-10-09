@@ -10,7 +10,7 @@ def cfpl_tokenize(code):
 	print("From cfpl_tokenize (data: statements): "+repr(statements))
 	tokens = list()
 	for statement in statements:
-		if(statement):			
+		if(statement):
 			content = statement.strip()
 			# tag each statement
 			tokens.append(getStatementType(content) + ":" + content)
@@ -34,8 +34,8 @@ def getStatementType(statement):
 		return "OUTPUT"
 	elif validate.isAssignment(statement):
 		return "ASSIGNMENT"
-	elif validate.isArithmeticExpression(statement):
-		return "ARITH_EXP"
+	# elif validate.isArithmeticExpression(statement):   <-- commented due to calling the isArithmeticExpression inside isAssignment function
+	# 	return "ARITH_EXP"
 	else:
 		return "INVALID"
 
@@ -47,7 +47,7 @@ def parseStatement(statements):
 	linenumber = 1
 	for statement in statements:
 		if(re.match("^INVALID", statement)):
-			isValid = False		
+			isValid = False
 			output = "Syntax error in line " + repr(linenumber)
 			break
 
@@ -62,19 +62,18 @@ def parseStatement(statements):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid start statement in line " + repr(linenumber)
-				break
-				
+				break				
 			output = ""
 
 		elif(re.match('^KEYWORD:START$', statement)):
 			hasStarted = True
+			output = ""
 
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid output statement in line " + repr(linenumber)
-				break
-				
+				break				
 			output = ""
 			process_output(statement)
 			# more work here for OUTPUT
@@ -83,8 +82,7 @@ def parseStatement(statements):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid assignment statement in line " + repr(linenumber)
-				break
-				
+				break				
 			output = ""
 			process_assignment(statement)
 
@@ -93,8 +91,8 @@ def parseStatement(statements):
 
 def process_output(statement):
 	global output
-	global dictionary	
-	if(statement):		
+	global dictionary
+	if(statement):
 		temp = re.sub("OUTPUT:", "", statement).strip()
 		if temp in dictionary.keys():
 			output = dictionary[temp]
@@ -103,7 +101,7 @@ def process_output(statement):
 
 def process_vardec(statement):
 	global dictionary
-	if(statement):	
+	if(statement):
 		# remove specified text from the string instead of using split
 		temp = re.sub("VARDEC:VAR|AS|INT|CHAR|BOOL|FLOAT", "", statement).strip()
 		# now only relevant text remains, lets split
@@ -120,7 +118,7 @@ def process_vardec(statement):
 		print(temp)
 		print("Dictionary content after process_vardec : " + repr(dictionary))
 
-def process_assignment(statement):	
+def process_assignment(statement):
 	global output
 	global dictionary
 	if(statement):
@@ -129,8 +127,10 @@ def process_assignment(statement):
 		tokens = temp.split('=')
 		identifier = tokens[0].strip() # element before the '=' operation
 		value = tokens[1].strip() # element after the '=' operator
+
 		if identifier in dictionary.keys():
 			dictionary[identifier] = value
+			
 		else:
 			output = "Error : Unspecified variable : " + repr(identifier)
 
