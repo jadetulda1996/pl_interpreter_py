@@ -5,7 +5,7 @@ arithmetic_operators = ["(", ")", "*", "/", "%", "+", "-", ">", "<", ">=", "<=",
 assignment_operators = ["="]
 logical_operators = ["AND", "OR", "NOT"]
 datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
-identifierSyntax = "([_a-zA-Z]+\d*){1,30}"
+identifierSyntax = "(_?[a-zA-Z]+\d*){1,30}" #<-- "_" should be followed by a letter
 arithOps_regex = "[\+\-\*\/\%]"
 number = "(\-?\d*\.?\d+)"
 
@@ -66,6 +66,8 @@ def isVarDeclaration(statement):
 	return re.match(regPattern, statement)
 
 def isAssignment(statement):
+
+	#To get the value of the identifier to be validated
 	temp = statement
 	tokens = temp.split('=')
 	identifier = tokens[0].strip() # element before the '=' operation
@@ -76,7 +78,7 @@ def isAssignment(statement):
 
 	allowedData 			= "('\w+')|"+identifierSyntax+"|"+number+"|"
 	firstAssignment			= identifierSyntax+"\s*={1}\s*("+allowedData+")"
-	addtnAssignment_opt		= "(={1}("+allowedData+"))*"
+	addtnAssignment_opt		= "("+identifierSyntax+"={1}("+allowedData+"))*"
 	regPattern				= "^"+firstAssignment+addtnAssignment_opt+"$"
 	return re.match(regPattern,statement)
 	#TODO fix bug (for multiple assignment, "=" must only followed to an identifier)

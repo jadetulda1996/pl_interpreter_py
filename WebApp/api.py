@@ -84,7 +84,7 @@ def parseStatement(statements):
 				output = "Invalid assignment statement in line " + repr(linenumber)
 				break				
 			output = ""
-			process_assignment(statement)
+			process_assignment(statement, linenumber)
 
 		linenumber += 1
 	return isValid
@@ -118,7 +118,7 @@ def process_vardec(statement):
 		print(temp)
 		print("Dictionary content after process_vardec : " + repr(dictionary))
 
-def process_assignment(statement):
+def process_assignment(statement, linenumber):
 	global output
 	global dictionary
 	if(statement):
@@ -130,9 +130,9 @@ def process_assignment(statement):
 
 		if identifier in dictionary.keys():
 			dictionary[identifier] = value
-			
 		else:
-			output = "Error : Unspecified variable : " + repr(identifier)
+			output = "Error : Unspecified variable : " + repr(identifier) + " in line " + repr(linenumber)
+			# break
 
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
