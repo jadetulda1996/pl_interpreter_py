@@ -70,8 +70,8 @@ def isAssignment(statement):
 	tokens = temp.split('=')
 	identifier = tokens[0].strip() # element before the '=' operation
 	value = tokens[1].strip() # element after the '=' operator
-	
-	if(isArithmeticExpression(value)):
+
+	if(isArithmeticExp(value)):
 		return True
 
 	allowedData 			= "('\w+')|"+identifierSyntax+"|"+number+"|"
@@ -88,18 +88,23 @@ def isAssignment(statement):
 		# a=1 or a=a or a=-1		=> success: identifier = data(+ or -) or identifier
 		# a==a 						=> error: is not an assignment operator
 
-def isArithmeticExpression(statement):
-	print("statement from isAssignment: "+repr(statement))
+def isExpression(statement):
+
+	return re.match(regPattern,statement)
+
+def isArithmeticExp(statement):
 	digitOrIdentifer	= "("+identifierSyntax+"|"+number+")"
 	ops 				= arithOps_regex+"{1}"
 	firstExp			= digitOrIdentifer+ops+digitOrIdentifer
 	addtnExp_opt		= "("+ops+digitOrIdentifer+")*"
 	regPattern			= "^"+firstExp+addtnExp_opt+"$"
 
-	# print(re.match(regPattern,statement))
 	return re.match(regPattern,statement)
 
+def isBooleanExp():
+	regPattern			= "^$"
 
+	return re.match(regPattern,statement)
 	# regex pattern composition:
 		# ^								=> start
 		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)
