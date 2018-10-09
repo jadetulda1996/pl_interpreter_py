@@ -8,6 +8,8 @@ datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
 identifierSyntax = "(_?[a-zA-Z]+\d*){1,30}" #<-- "_" should be followed by a letter
 arithOps_regex = "[\+\-\*\/\%]"
 number = "(\-?\d*\.?\d+)"
+boolOps = "(\>|\<|(\>\=)|(\<\=)|(\=\=)|(\<\>))"
+logicOps = "(AND|OR|NOT)"
 
 def checkTokenType(token):
 	tokentype = ""
@@ -69,19 +71,23 @@ def isAssignment(statement):
 
 	#To get the value of the identifier to be validated
 	temp = statement
-	tokens = temp.split('=')
-	identifier = tokens[0].strip() # element before the '=' operation
-	value = tokens[1].strip() # element after the '=' operator
 
-	if(isArithmeticExp(value)):
-		return True
+	if(re.search("=",temp)):
+		value = temp.split("=", 1)[1] # remove identifier and its first "=" occurence
+		#TODO separate value from identifier
+		print(value)
+		if(isArithmeticExp(value)):
+			return True
+		elif(isBoolean(value)):
+			return True
 
-	allowedData 			= "('\w+')|"+identifierSyntax+"|"+number+"|"
-	firstAssignment			= identifierSyntax+"\s*={1}\s*("+allowedData+")"
-	addtnAssignment_opt		= "("+identifierSyntax+"={1}("+allowedData+"))*"
-	regPattern				= "^"+firstAssignment+addtnAssignment_opt+"$"
-	return re.match(regPattern,statement)
-	#TODO fix bug (for multiple assignment, "=" must only followed to an identifier)
+		allowedData 			= "('\w+')|"+identifierSyntax+"|"+number+"|"
+		firstAssignment			= identifierSyntax+"\s*={1}\s*("+allowedData+")"
+		addtnAssignment_opt		= "("+identifierSyntax+"={1}("+allowedData+"))*"
+		regPattern				= "^"+firstAssignment+addtnAssignment_opt+"$"
+		return re.match(regPattern,statement)
+	else:
+		return False
 
 	#Note: Check variable declaration on top (in process_assignment function)
 
@@ -100,13 +106,27 @@ def isArithmeticExp(statement):
 	firstExp			= digitOrIdentifer+ops+digitOrIdentifer
 	addtnExp_opt		= "("+ops+digitOrIdentifer+")*"
 	regPattern			= "^"+firstExp+addtnExp_opt+"$"
-
 	return re.match(regPattern,statement)
 
-def isBooleanExp():
-	regPattern			= "^$"
-
+def isBooleanExp(statement):
+	allowedData					= "("+identifierSyntax+"|"+number+")"
+	singleBoolExp				= "("+allowedData+"\s?"+boolOps+"\s?"+allowedData+")"
+	addtnBoolExp_opt			= "("+boolOps+allowedData+")*"
+	multiBoolExp				= "("+singleBoolExp+addtnBoolExp_opt+")"
+	regPattern					= "^("+multiBoolExp+")$"
 	return re.match(regPattern,statement)
+
+def isBoolean(statement):
+	if(re.search(logicOps, statement)):
+		allowedData					= "("+identifierSyntax+"|"+number+")"
+		singleBoolOpr				= "("+allowedData+"\s"+logicOps+"\s"+allowedData+")"
+		addtnBoolOpr_opt			= "(\s"+logicOps+"\s"+allowedData+")*"
+		multiBoolOpr				= "("+singleBoolOpr+addtnBoolOpr_opt+")"
+		regPattern					= "^("+multiBoolOpr+")$"
+		return re.match(regPattern,statement)
+
+	else:
+		return isBooleanExp(statement)
 	# regex pattern composition:
 		# ^								=> start
 		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)

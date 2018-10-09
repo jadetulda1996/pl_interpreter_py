@@ -124,7 +124,7 @@ def process_assignment(statement, linenumber):
 	if(statement):
 		#temp = statement.split('ASSIGNMENT:')[1:] #remove assignment tag
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
-		tokens = temp.split('=')
+		tokens = temp.split('=', 1)
 		identifier = tokens[0].strip() # element before the '=' operation
 		value = tokens[1].strip() # element after the '=' operator
 
