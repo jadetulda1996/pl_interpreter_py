@@ -64,7 +64,7 @@ def isInteger32(token):
 	return re.match("\-?\d+", token)
 
 def isFloat(token):
-	return re.match("\-?\d*\.\d+", token)
+	return re.match("\-?\d*(\.\d+)?", token)
 
 def isChar(token):
 	if(isinstance(token, str)):
@@ -105,11 +105,14 @@ def isVarDeclaration(statement):
 					varDeclarations[identifier] = value
 				else:
 					return False
-
 			else:
-				varDeclarations[varToken] = ''
+				identifier = varToken
+				value = getDefaultValue(varType)
+				varDeclarations[identifier] = value
 
-	allowedData		= "(\-?\d+|\-?\d*\.\d+|\'\w?\.?\'|TRUE|FALSE)"
+	print(varDeclarations)
+
+	allowedData		= "(\-?\d+|\-?\d*(\.\d+)?|\'\w?\.?\'|TRUE|FALSE)"
 	requiredDec 	= "VAR\s"+identifierSyntax
 	optDec			= "(\s*=\s*"+allowedData+")?(\s*,\s*"+identifierSyntax+"(\s*=\s*"+allowedData+")?)*\s"
 	varDec 			= requiredDec+optDec
@@ -129,6 +132,14 @@ def isMatchValueVarDecType(value, typeUsed):
 		return isFloat(value)
 	else:
 		return re.match("(INT|FLOAT|CHAR|BOOL)", typeUsed)
+
+def getDefaultValue(typeUsed):
+	if(re.match("(INT|FLOAT)", typeUsed)):
+		return 0
+	elif(re.match("CHAR", typeUsed)):
+		return ""
+	elif(re.match("BOOL", typeUsed)):
+		return "FALSE"
 
 def isAssignment(statement):
 
