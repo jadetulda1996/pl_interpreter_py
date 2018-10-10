@@ -54,18 +54,81 @@ def isArithmeticOperator(token):
 def isIdentifier(token):
 	return re.match(identifierSyntax, token)
 
-def isDigit(token):
-	return re.match("\d+", token)
+def isInteger32(token):
+	if(re.search("\.", token)):
+		return False
+
+	if(abs(int(token)) > (2**31-1)):
+		return False
+
+	return re.match("\-?\d+", token)
+
+def isFloat(token):
+	return re.match("\-?\d*\.\d+", token)
+
+def isChar(token):
+	if(isinstance(token, str)):
+		return re.match("\'\w?\.?\'", token)
+
+	return False
+
+def isBool(token):
+	return re.match("^(TRUE|FALSE)$", token)
+
+def getVarValue(token):
+	return token.split("=",1)[1].strip()
+
+def getVarIdentifier(token):
+	return token.split("=",1)[0].strip()
 
 def isVarDeclaration(statement):
-	# allow spaces between identifiers and/or its values
+	varDeclarations = {}
+	# remove specified text from the string instead of using split
+	temp = re.sub("VAR|AS|INT|CHAR|BOOL|FLOAT", "", statement).strip()
+	varType = re.split("\s+", statement)[::-1][0] #[::-1] -> reverse list, [0] -> get varType
+	identifierTokens = []
+
+	if(re.search(",", temp)):
+		identifierTokens = temp.split(",") #split multiple declared identifiers
+	else:
+		identifierTokens.append(temp) #single identifier declared
+	
+	if(identifierTokens):
+		for varToken in identifierTokens:
+			value = ""
+			identifier = ""
+			if(re.search("=", varToken)): #get the value
+				identifier = getVarIdentifier(varToken)
+				value = getVarValue(varToken)
+
+				if(isMatchValueVarDecType(value, varType)):
+					varDeclarations[identifier] = value
+				else:
+					return False
+
+			else:
+				varDeclarations[varToken] = ''
+
+	allowedData		= "(\-?\d+|\-?\d*\.\d+|\'\w?\.?\'|TRUE|FALSE)"
 	requiredDec 	= "VAR\s"+identifierSyntax
-	optDec			= "(\s*=\s*\w+)?(\s*,\s*"+identifierSyntax+"(\s*=\s*\w+)?)*\s"
+	optDec			= "(\s*=\s*"+allowedData+")?(\s*,\s*"+identifierSyntax+"(\s*=\s*"+allowedData+")?)*\s"
 	varDec 			= requiredDec+optDec
 	varType			= "AS\s(INT|CHAR|BOOL|FLOAT)"
 	regPattern = "^"+varDec+varType+"$"
 	
 	return re.match(regPattern, statement)
+
+def isMatchValueVarDecType(value, typeUsed):
+	if(re.match("INT", typeUsed)):
+		return isInteger32(value)
+	elif(re.match("CHAR", typeUsed)):
+		return isChar(value)
+	elif(re.match("BOOL", typeUsed)):
+		return isBool(value)
+	elif(re.match("FLOAT", typeUsed)):
+		return isFloat(value)
+	else:
+		return re.match("(INT|FLOAT|CHAR|BOOL)", typeUsed)
 
 def isAssignment(statement):
 
@@ -74,8 +137,7 @@ def isAssignment(statement):
 
 	if(re.search("=",temp)):
 		value = temp.split("=", 1)[1] # remove identifier and its first "=" occurence
-		#TODO separate value from identifier
-		print(value)
+
 		if(isArithmeticExp(value)):
 			return True
 		elif(isBoolean(value)):
@@ -97,7 +159,6 @@ def isAssignment(statement):
 		# a==a 						=> error: is not an assignment operator
 
 def isExpression(statement):
-
 	return re.match(regPattern,statement)
 
 def isArithmeticExp(statement):
