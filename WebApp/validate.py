@@ -5,10 +5,11 @@ arithmetic_operators = ["(", ")", "*", "/", "%", "+", "-", ">", "<", ">=", "<=",
 assignment_operators = ["="]
 logical_operators = ["AND", "OR", "NOT"]
 datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
-identifierSyntax = "([_a-zA-Z]+\d*){1,30}"
+identifierSyntax = "(_?[a-zA-Z]+\d*){1,30}" #<-- "_" should be followed by a letter
 arithOps_regex = "[\+\-\*\/\%]"
-optNegSign = "[\-\+]?"
-posOrNeg = "(\-?\d*\.?\d+)"
+number = "(\-?\d*\.?\d+)"
+boolOps = "(\>|\<|(\>\=)|(\<\=)|(\=\=)|(\<\>))"
+logicOps = "(AND|OR|NOT)"
 
 def checkTokenType(token):
 	tokentype = ""
@@ -53,25 +54,113 @@ def isArithmeticOperator(token):
 def isIdentifier(token):
 	return re.match(identifierSyntax, token)
 
-def isDigit(token):
-	return re.match("\d+", token)
+def isInteger32(token):
+	if(re.search("\.", token)):
+		return False
+
+	if(abs(int(token)) > (2**31-1)):
+		return False
+
+	return re.match("\-?\d+", token)
+
+def isFloat(token):
+	return re.match("\-?\d*(\.\d+)?", token)
+
+def isChar(token):
+	if(isinstance(token, str)):
+		return re.match("\'\w?\.?\'", token)
+
+	return False
+
+def isBool(token):
+	return re.match("^(TRUE|FALSE)$", token)
+
+def getVarValue(token):
+	return token.split("=",1)[1].strip()
+
+def getVarIdentifier(token):
+	return token.split("=",1)[0].strip()
 
 def isVarDeclaration(statement):
-	# allow spaces between identifiers and/or its values
-	varDec 	= "VAR\s"+identifierSyntax+"(\s*=\s*\w+)?(\s*,\s*"+identifierSyntax+"(\s*=\s*\w+)?)*\s"
-	varType	= "AS\s(INT|CHAR|BOOL|FLOAT)"
+	varDeclarations = {}
+	# remove specified text from the string instead of using split
+	temp = re.sub("VAR|AS|INT|CHAR|BOOL|FLOAT", "", statement).strip()
+	varType = re.split("\s+", statement)[::-1][0] #[::-1] -> reverse list, [0] -> get varType
+	identifierTokens = []
+
+	if(re.search(",", temp)):
+		identifierTokens = temp.split(",") #split multiple declared identifiers
+	else:
+		identifierTokens.append(temp) #single identifier declared
+	
+	if(identifierTokens):
+		for varToken in identifierTokens:
+			value = ""
+			identifier = ""
+			if(re.search("=", varToken)): #get the value
+				identifier = getVarIdentifier(varToken)
+				value = getVarValue(varToken)
+
+				if(isMatchValueVarDecType(value, varType)):
+					varDeclarations[identifier] = value
+				else:
+					return False
+			else:
+				identifier = varToken
+				value = getDefaultValue(varType)
+				varDeclarations[identifier] = value
+
+	print(varDeclarations)
+
+	allowedData		= "(\-?\d+|\-?\d*(\.\d+)?|\'\w?\.?\'|TRUE|FALSE)"
+	requiredDec 	= "VAR\s"+identifierSyntax
+	optDec			= "(\s*=\s*"+allowedData+")?(\s*,\s*"+identifierSyntax+"(\s*=\s*"+allowedData+")?)*\s"
+	varDec 			= requiredDec+optDec
+	varType			= "AS\s(INT|CHAR|BOOL|FLOAT)"
 	regPattern = "^"+varDec+varType+"$"
 	
 	return re.match(regPattern, statement)
 
-def isAssignment(statement):
-	allowedData 			= "('\w+')|"+identifierSyntax+"|"+posOrNeg
-	firstAssignment			= identifierSyntax+"\s*={1}\s*("+allowedData+")"
-	addtnAssignment_opt		= "(={1}("+allowedData+"))*"
-	regPattern				= "^"+firstAssignment+addtnAssignment_opt+"$"
+def isMatchValueVarDecType(value, typeUsed):
+	if(re.match("INT", typeUsed)):
+		return isInteger32(value)
+	elif(re.match("CHAR", typeUsed)):
+		return isChar(value)
+	elif(re.match("BOOL", typeUsed)):
+		return isBool(value)
+	elif(re.match("FLOAT", typeUsed)):
+		return isFloat(value)
+	else:
+		return re.match("(INT|FLOAT|CHAR|BOOL)", typeUsed)
 
-	return re.match(regPattern,statement)
-	#TODO fix bug (for multiple assignment, "=" must only followed to an identifier)
+def getDefaultValue(typeUsed):
+	if(re.match("(INT|FLOAT)", typeUsed)):
+		return 0
+	elif(re.match("CHAR", typeUsed)):
+		return ""
+	elif(re.match("BOOL", typeUsed)):
+		return "FALSE"
+
+def isAssignment(statement):
+
+	#To get the value of the identifier to be validated
+	temp = statement
+
+	if(re.search("=",temp)):
+		value = temp.split("=", 1)[1] # remove identifier and its first "=" occurence
+
+		if(isArithmeticExp(value)):
+			return True
+		elif(isBoolean(value)):
+			return True
+
+		allowedData 			= "('\w+')|"+identifierSyntax+"|"+number+"|"
+		firstAssignment			= identifierSyntax+"\s*={1}\s*("+allowedData+")"
+		addtnAssignment_opt		= "("+identifierSyntax+"={1}("+allowedData+"))*"
+		regPattern				= "^"+firstAssignment+addtnAssignment_opt+"$"
+		return re.match(regPattern,statement)
+	else:
+		return False
 
 	#Note: Check variable declaration on top (in process_assignment function)
 
@@ -80,15 +169,36 @@ def isAssignment(statement):
 		# a=1 or a=a or a=-1		=> success: identifier = data(+ or -) or identifier
 		# a==a 						=> error: is not an assignment operator
 
-def isArithmeticExpression(statement):
-	digitOrIdentifer	= identifierSyntax+"|"+posOrNeg
-	ops 				= arithOps_regex+"{1}"
-	firstExp			= "("+digitOrIdentifer+")+"+ops+"("+digitOrIdentifer+")+"
-	addtnExp_opt		= "("+ops+"("+digitOrIdentifer+")+)*"
-	regPattern			= "^"+firstExp+addtnExp_opt+"$"
-
+def isExpression(statement):
 	return re.match(regPattern,statement)
 
+def isArithmeticExp(statement):
+	digitOrIdentifer	= "("+identifierSyntax+"|"+number+")"
+	ops 				= arithOps_regex+"{1}"
+	firstExp			= digitOrIdentifer+ops+digitOrIdentifer
+	addtnExp_opt		= "("+ops+digitOrIdentifer+")*"
+	regPattern			= "^"+firstExp+addtnExp_opt+"$"
+	return re.match(regPattern,statement)
+
+def isBooleanExp(statement):
+	allowedData					= "("+identifierSyntax+"|"+number+")"
+	singleBoolExp				= "("+allowedData+"\s?"+boolOps+"\s?"+allowedData+")"
+	addtnBoolExp_opt			= "("+boolOps+allowedData+")*"
+	multiBoolExp				= "("+singleBoolExp+addtnBoolExp_opt+")"
+	regPattern					= "^("+multiBoolExp+")$"
+	return re.match(regPattern,statement)
+
+def isBoolean(statement):
+	if(re.search(logicOps, statement)):
+		allowedData					= "("+identifierSyntax+"|"+number+")"
+		singleBoolOpr				= "("+allowedData+"\s"+logicOps+"\s"+allowedData+")"
+		addtnBoolOpr_opt			= "(\s"+logicOps+"\s"+allowedData+")*"
+		multiBoolOpr				= "("+singleBoolOpr+addtnBoolOpr_opt+")"
+		regPattern					= "^("+multiBoolOpr+")$"
+		return re.match(regPattern,statement)
+
+	else:
+		return isBooleanExp(statement)
 	# regex pattern composition:
 		# ^								=> start
 		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)
