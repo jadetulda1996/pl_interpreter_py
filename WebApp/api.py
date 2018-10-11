@@ -3,6 +3,7 @@ from . import validate
 
 output = ""
 dictionary = {}
+isValid = True
 
 def cfpl_tokenize(code):
 	global output	
@@ -40,8 +41,8 @@ def getStatementType(statement):
 		return "INVALID"
 
 def parseStatement(statements):
-	global output
-	isValid = True
+	global output	
+	global isValid
 	hasStarted = False
 	hasStop = False
 	linenumber = 1
@@ -56,12 +57,12 @@ def parseStatement(statements):
 				output = "Invalid variable declaration in line " + repr(linenumber)
 				break
 			# more work here for VARDEC
-			process_vardec(statement)
+			process_vardec(statement)			
+		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid start statement in line " + repr(linenumber)
 				break
-		elif(re.match('^KEYWORD:START$', statement)):
 			hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
 			continue
 		elif(re.match("^OUTPUT", statement)):
@@ -78,8 +79,9 @@ def parseStatement(statements):
 				break
 			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
 		
+		if not isValid:
+			break
 		linenumber += 1
-	return isValid
 
 def process_output(statement):
 	global output
@@ -113,16 +115,19 @@ def process_vardec(statement):
 def process_assignment(statement):	
 	global output
 	global dictionary
+	global isValid
 	if(statement):
 		#temp = statement.split('ASSIGNMENT:')[1:] #remove assignment tag
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
+		print(temp)
 		tokens = temp.split('=')
 		identifier = tokens[0].strip() # element before the '=' operation
 		value = tokens[1].strip() # element after the '=' operator
 		if identifier in dictionary.keys():
 			dictionary[identifier] = value
 		else:
-			output = "Error : Unspecified variable : " + repr(identifier)
+			output = "Error : Undefined variable : " + repr(identifier)
+			isValid = False
 
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
