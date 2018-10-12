@@ -63,7 +63,7 @@ def parseStatement(statements):
 				break
 			# more work here for VARDEC
 			process_vardec(statement)
-			output = ""
+			#output = ""
 
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
@@ -99,7 +99,7 @@ def parseStatement(statements):
 				isValid = False
 				output = "Invalid output statement in line " + repr(linenumber)
 				break
-			output = ""
+			#output = ""
 			process_output(statement)
 			# more work here for OUTPUT
 
