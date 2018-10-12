@@ -21,6 +21,7 @@ def cfpl_tokenize(code):
 def cfpl_parse(statements):
 	# lets scan
 	dictionary.clear()
+	validate.clearvarDeclarations()
 	parseStatement(statements)
 	return output
 
@@ -39,7 +40,7 @@ def getStatementType(statement):
 		return "INVALID"
 
 def parseStatement(statements):
-	global output	
+	global output
 	global isValid
 	hasStarted = False
 	hasStop = False
@@ -48,7 +49,6 @@ def parseStatement(statements):
 	hasStartedIF = False
 
 	for statement in statements:
-		print(linenumber)
 		if(re.match("^INVALID", statement)):
 			isValid = False
 			output = "Syntax error in line " + repr(linenumber)
@@ -111,9 +111,6 @@ def parseStatement(statements):
 				output = "Invalid assignment statement in line " + repr(linenumber)
 				break
 			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
-		
-		if not isValid:
-			break
 
 		elif(re.match('^KEYWORD:IF', statement)):
 			if(hasStarted == False):
@@ -128,12 +125,16 @@ def parseStatement(statements):
 			process_conditionStruct()
 
 		elif(re.match("^KEYWORD:ELSE", statement)):
+			print(hasIF)
 			if(hasIF == False):
 				isValid = False
 				output = "Incorrect use of ELSE statement in line " + repr(linenumber)
 				break;
 			hasIF = False
 			process_conditionStruct()
+
+		# if not isValid:
+		# 	break
 
 		linenumber += 1
 
