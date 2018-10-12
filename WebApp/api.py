@@ -45,6 +45,8 @@ def parseStatement(statements):
 	hasStarted = False
 	hasStop = False
 	linenumber = 1
+	output = ""
+	isValid = True
 	hasIF = False
 	hasStartedIF = False
 
@@ -63,13 +65,13 @@ def parseStatement(statements):
 			process_vardec(statement)
 			output = ""
 
-		elif(re.match('^KEYWORD:START$', statement)):
-			if(hasStarted):
-				isValid = False
-				output = "Invalid start statement in line " + repr(linenumber)
-				break
-			output = ""
-
+		# elif(re.match('^KEYWORD:START$', statement)):
+		# 	if(hasStarted):
+		# 		isValid = False
+		# 		output = "Invalid start statement in line " + repr(linenumber)
+		# 		break
+		# 	hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
+			
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted == False):
 				hasStarted = True 	# <-- main START
@@ -92,10 +94,6 @@ def parseStatement(statements):
 				hasStartedIF = False
 				print("hasStartedIF: " + repr(hasStartedIF))
 
-			# if(hasStartedIF == False)
-			
-			output = ""
-
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
 				isValid = False
@@ -111,6 +109,10 @@ def parseStatement(statements):
 				output = "Invalid assignment statement in line " + repr(linenumber)
 				break
 			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
+		
+		if not isValid:
+			output += "\nError was found in line : " + repr(linenumber)
+			break
 
 		elif(re.match('^KEYWORD:IF', statement)):
 			if(hasStarted == False):
@@ -133,20 +135,19 @@ def parseStatement(statements):
 			hasIF = False
 			process_conditionStruct()
 
-		# if not isValid:
-		# 	break
-
 		linenumber += 1
 
 def process_output(statement):
 	global output
 	global dictionary
+	global isValid
 	if(statement):
 		temp = re.sub("OUTPUT:", "", statement).strip()
 		if temp in dictionary.keys():
 			output = dictionary[temp]
 		else:
 			output = "Error : Unspecified variable : " + repr(temp)
+			isValid = False
 
 def process_vardec(statement):
 	global dictionary
@@ -165,25 +166,33 @@ def process_vardec(statement):
 			else:
 				dictionary[token] = ''
 		print(temp)
-		print("Dictionary content after process_vardec : " + repr(dictionary))
+		#print("Dictionary content after process_vardec : " + repr(dictionary))
 
-def process_assignment(statement, linenumber):
+def process_assignment(statement):
 	global output
 	global dictionary
 	global isValid
 	if(statement):
-		#temp = statement.split('ASSIGNMENT:')[1:] #remove assignment tag
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
-		print(temp)
 		tokens = temp.split('=')
-		identifier = tokens[0].strip() # element before the '=' operation
-		value = tokens[1].strip() # element after the '=' operator
-
-		if identifier in dictionary.keys():
-			dictionary[identifier] = value
-		else:
-			output = "Error : Undefined variable : " + repr(identifier)
-			isValid = False
+		value = tokens[-1].strip() # element after the '=' operator
+		
+		if(validate.isIdentifier(value)):
+			if value in dictionary.keys():
+				value = dictionary[value]			
+			else:
+				output = "Error : Undefined variable : " + repr(value)
+				isValid = False
+		
+		if(isValid):
+			for token in tokens[:-1]:
+				identifier = token.strip()
+				if identifier in dictionary.keys():
+					dictionary[identifier] = value
+				else:
+					output = "Error : Undefined variable : " + repr(identifier)
+					isValid = False
+					break
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
 def process_conditionStruct():
