@@ -3,6 +3,7 @@ from . import validate
 
 output = ""
 dictionary = {}
+isValid = True
 
 def cfpl_tokenize(code):
 	global output	
@@ -38,8 +39,8 @@ def getStatementType(statement):
 		return "INVALID"
 
 def parseStatement(statements):
-	global output
-	isValid = True
+	global output	
+	global isValid
 	hasStarted = False
 	hasStop = False
 	linenumber = 1
@@ -59,11 +60,13 @@ def parseStatement(statements):
 				output = "Invalid variable declaration in line " + repr(linenumber)
 				break
 			# more work here for VARDEC
-			process_vardec(statement)
+			process_vardec(statement)	
 
+		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid start statement in line " + repr(linenumber)
+<<<<<<< HEAD
 				break
 			output = ""
 
@@ -92,6 +95,18 @@ def parseStatement(statements):
 			# if(hasStartedIF == False)
 			
 			output = ""
+||||||| merged common ancestors
+				break				
+			output = ""
+
+		elif(re.match('^KEYWORD:START$', statement)):
+			hasStarted = True
+			output = ""
+=======
+				break
+			hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
+			continue
+>>>>>>> 2d55ed8c38f747de71ec551f8ef2a88197fd3e00
 
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
@@ -106,9 +121,11 @@ def parseStatement(statements):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid assignment statement in line " + repr(linenumber)
-				break				
-			output = ""
-			process_assignment(statement, linenumber)
+				break
+			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
+		
+		if not isValid:
+			break
 
 		elif(re.match('^KEYWORD:IF', statement)):
 			if(hasStarted == False):
@@ -131,7 +148,6 @@ def parseStatement(statements):
 			process_conditionStruct()
 
 		linenumber += 1
-	return isValid
 
 def process_output(statement):
 	global output
@@ -165,19 +181,20 @@ def process_vardec(statement):
 def process_assignment(statement, linenumber):
 	global output
 	global dictionary
+	global isValid
 	if(statement):
 		#temp = statement.split('ASSIGNMENT:')[1:] #remove assignment tag
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
-		tokens = temp.split('=', 1)
+		print(temp)
+		tokens = temp.split('=')
 		identifier = tokens[0].strip() # element before the '=' operation
 		value = tokens[1].strip() # element after the '=' operator
 
 		if identifier in dictionary.keys():
 			dictionary[identifier] = value
 		else:
-			output = "Error : Unspecified variable : " + repr(identifier) + " in line " + repr(linenumber)
-			# break
-
+			output = "Error : Undefined variable : " + repr(identifier)
+			isValid = False
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
 def process_conditionStruct():
