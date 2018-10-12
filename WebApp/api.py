@@ -128,16 +128,25 @@ def process_assignment(statement):
 	global isValid
 	if(statement):
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
-		print(temp)
 		tokens = temp.split('=')
-		identifier = tokens[0].strip() # element before the '=' operation
-		value = tokens[1].strip() # element after the '=' operator
-
-		if identifier in dictionary.keys():
-			dictionary[identifier] = value
-		else:
-			output = "Error : Undefined variable : " + repr(identifier)
-			isValid = False
+		value = tokens[-1].strip() # element after the '=' operator
+		
+		if(validate.isIdentifier(value)):
+			if value in dictionary.keys():
+				value = dictionary[value]			
+			else:
+				output = "Error : Undefined variable : " + repr(value)
+				isValid = False
+		
+		if(isValid):
+			for token in tokens[:-1]:
+				identifier = token.strip()
+				if identifier in dictionary.keys():
+					dictionary[identifier] = value
+				else:
+					output = "Error : Undefined variable : " + repr(identifier)
+					isValid = False
+					break
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
 
