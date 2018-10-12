@@ -40,7 +40,7 @@ def isComment(statement):
 
 def isKeyword(token):
 	#return token in keyword
-	return re.match("^(VAR|AS|START|STOP)$", token)
+	return re.match("^(VAR|AS|START|STOP|IF|ELSE)$", token)
 
 def isDatatype(token):
 	return token in datatype
@@ -54,14 +54,14 @@ def isArithmeticOperator(token):
 def isIdentifier(token):
 	return re.match(identifierSyntax, token)
 
-def isInteger32(token):
+def isInteger32(token):	
 	if(re.search("\.", token)):
 		return False
 
+	return re.match("\-?\d+", token)
+
 	if(abs(int(token)) > (2**31-1)):
 		return False
-
-	return re.match("\-?\d+", token)
 
 def isFloat(token):
 	return re.match("\-?\d*(\.\d+)?", token)
