@@ -85,7 +85,7 @@ def parseStatement(statements):
 			# output = ""
 
 		elif(re.match('^KEYWORD:STOP$', statement)):
-			if(hasStartedIF == False and hasStarted == True):
+			if(hasIF == True and hasStartedIF == False and hasStarted == True):
 				isValid = False
 				output = "Invalid stop statement in line " + repr(linenumber)
 				break
