@@ -35,8 +35,6 @@ def getStatementType(statement):
 		return "OUTPUT"
 	elif validate.isAssignment(statement):
 		return "ASSIGNMENT"
-	# elif validate.isArithmeticExpression(statement):   <-- commented due to calling the isArithmeticExpression inside isAssignment function
-	# 	return "ARITH_EXP"
 	else:
 		return "INVALID"
 
@@ -48,7 +46,11 @@ def parseStatement(statements):
 	linenumber = 1
 	output = ""
 	isValid = True
+	hasIF = False
+	hasStartedIF = False
+
 	for statement in statements:
+		print(linenumber)
 		if(re.match("^INVALID", statement)):
 			isValid = False
 			output = "Syntax error in line " + repr(linenumber)
@@ -60,7 +62,8 @@ def parseStatement(statements):
 				output = "Invalid variable declaration in line " + repr(linenumber)
 				break
 			# more work here for VARDEC
-			process_vardec(statement)	
+			process_vardec(statement)
+			output = ""
 
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
@@ -69,11 +72,33 @@ def parseStatement(statements):
 				break
 			hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
 			
+		elif(re.match('^KEYWORD:START$', statement)):
+			if(hasStarted == False):
+				hasStarted = True 	# <-- main START
+				print("hasStarted: " + repr(hasStarted))
+
+			if(hasIF == True):
+				hasStartedIF = True 	# <-- for any IF Statement starting point
+				print("hasStartedIF: " + repr(hasStartedIF))
+			else:
+				print("hasStartedIF: " + repr(hasStartedIF))
+			# output = ""
+
+		elif(re.match('^KEYWORD:STOP$', statement)):
+			if(hasStartedIF == False and hasStarted == True):
+				isValid = False
+				output = "Invalid stop statement in line " + repr(linenumber)
+				break
+			
+			if(hasStartedIF == True and hasStarted == True):
+				hasStartedIF = False
+				print("hasStartedIF: " + repr(hasStartedIF))
+
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid output statement in line " + repr(linenumber)
-				break				
+				break
 			output = ""
 			process_output(statement)
 			# more work here for OUTPUT
@@ -88,6 +113,26 @@ def parseStatement(statements):
 		if not isValid:
 			output += "\nError was found in line : " + repr(linenumber)
 			break
+
+		elif(re.match('^KEYWORD:IF', statement)):
+			if(hasStarted == False):
+				isValid = False
+				output = "Invalid IF statement in line " + repr(linenumber)
+				break;
+
+			hasIF = True
+			print("hasIF: " + repr(hasIF))
+			print("hasStartedIF: " + repr(hasStartedIF))
+			output = ""
+			process_conditionStruct()
+
+		elif(re.match("^KEYWORD:ELSE", statement)):
+			if(hasIF == False):
+				isValid = False
+				output = "Incorrect use of ELSE statement in line " + repr(linenumber)
+				break;
+			hasIF = False
+			process_conditionStruct()
 
 		linenumber += 1
 
@@ -148,6 +193,9 @@ def process_assignment(statement):
 					isValid = False
 					break
 		print("Dictionary content after process_assignment : " + repr(dictionary))
+
+def process_conditionStruct():
+	return True
 
 
 #REGEX SYMBOL GUIDE
