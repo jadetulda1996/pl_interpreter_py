@@ -46,6 +46,8 @@ def parseStatement(statements):
 	hasStarted = False
 	hasStop = False
 	linenumber = 1
+	output = ""
+	isValid = True
 	for statement in statements:
 		if(re.match("^INVALID", statement)):
 			isValid = False
@@ -66,8 +68,7 @@ def parseStatement(statements):
 				output = "Invalid start statement in line " + repr(linenumber)
 				break
 			hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
-			continue
-
+			
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
 				isValid = False
@@ -85,6 +86,7 @@ def parseStatement(statements):
 			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
 		
 		if not isValid:
+			output += "\nError was found in line : " + repr(linenumber)
 			break
 
 		linenumber += 1
@@ -92,12 +94,14 @@ def parseStatement(statements):
 def process_output(statement):
 	global output
 	global dictionary
+	global isValid
 	if(statement):
 		temp = re.sub("OUTPUT:", "", statement).strip()
 		if temp in dictionary.keys():
 			output = dictionary[temp]
 		else:
 			output = "Error : Unspecified variable : " + repr(temp)
+			isValid = False
 
 def process_vardec(statement):
 	global dictionary
@@ -116,14 +120,13 @@ def process_vardec(statement):
 			else:
 				dictionary[token] = ''
 		print(temp)
-		print("Dictionary content after process_vardec : " + repr(dictionary))
+		#print("Dictionary content after process_vardec : " + repr(dictionary))
 
-def process_assignment(statement, linenumber):
+def process_assignment(statement):
 	global output
 	global dictionary
 	global isValid
 	if(statement):
-		#temp = statement.split('ASSIGNMENT:')[1:] #remove assignment tag
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
 		print(temp)
 		tokens = temp.split('=')
