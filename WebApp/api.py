@@ -60,13 +60,13 @@ def parseStatement(statements):
 				output = "Invalid variable declaration in line " + repr(linenumber)
 				break
 			# more work here for VARDEC
-			process_vardec(statement)	
+			process_vardec(statement)
+			output = ""
 
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted):
 				isValid = False
 				output = "Invalid start statement in line " + repr(linenumber)
-<<<<<<< HEAD
 				break
 			output = ""
 
@@ -95,18 +95,6 @@ def parseStatement(statements):
 			# if(hasStartedIF == False)
 			
 			output = ""
-||||||| merged common ancestors
-				break				
-			output = ""
-
-		elif(re.match('^KEYWORD:START$', statement)):
-			hasStarted = True
-			output = ""
-=======
-				break
-			hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
-			continue
->>>>>>> 2d55ed8c38f747de71ec551f8ef2a88197fd3e00
 
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):

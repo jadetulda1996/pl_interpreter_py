@@ -10,6 +10,7 @@ arithOps_regex = "[\+\-\*\/\%]"
 number = "(\-?\d*\.?\d+)"
 boolOps = "(\>|\<|(\>\=)|(\<\=)|(\=\=)|(\<\>))"
 logicOps = "(AND|OR|NOT)"
+varDeclarations = {}
 
 def checkTokenType(token):
 	tokentype = ""
@@ -82,7 +83,7 @@ def getVarIdentifier(token):
 	return token.split("=",1)[0].strip()
 
 def isVarDeclaration(statement):
-	varDeclarations = {}
+	global varDeclarations
 	# remove specified text from the string instead of using split
 	temp = re.sub("VAR|AS|INT|CHAR|BOOL|FLOAT", "", statement).strip()
 	varType = re.split("\s+", statement)[::-1][0] #[::-1] -> reverse list, [0] -> get varType
@@ -92,25 +93,35 @@ def isVarDeclaration(statement):
 		identifierTokens = temp.split(",") #split multiple declared identifiers
 	else:
 		identifierTokens.append(temp) #single identifier declared
-	
+	print(identifierTokens)
+	print(varDeclarations)
 	if(identifierTokens):
 		for varToken in identifierTokens:
 			value = ""
 			identifier = ""
+
 			if(re.search("=", varToken)): #get the value
 				identifier = getVarIdentifier(varToken)
 				value = getVarValue(varToken)
+
+				if(identifier in varDeclarations):
+					return False
 
 				if(isMatchValueVarDecType(value, varType)):
 					varDeclarations[identifier] = value
 				else:
 					return False
+
 			else:
 				identifier = varToken
+
+				if(identifier in varDeclarations):
+					return False
+
 				value = getDefaultValue(varType)
 				varDeclarations[identifier] = value
 
-	print(varDeclarations)
+	print("varDec: " + repr(varDeclarations))
 
 	allowedData		= "(\-?\d+|\-?\d*(\.\d+)?|\'\w?\.?\'|TRUE|FALSE)"
 	requiredDec 	= "VAR\s"+identifierSyntax
