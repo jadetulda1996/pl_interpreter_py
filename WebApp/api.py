@@ -110,10 +110,6 @@ def parseStatement(statements):
 				break
 			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
 		
-		if not isValid:
-			output += "\nError was found in line : " + repr(linenumber)
-			break
-
 		elif(re.match('^KEYWORD:IF', statement)):
 			if(hasStarted == False):
 				isValid = False
@@ -135,6 +131,9 @@ def parseStatement(statements):
 			hasIF = False
 			process_conditionStruct()
 
+		if not isValid: # insert "elif" above this line
+			output += "\nError was found in line : " + repr(linenumber)
+			break
 		linenumber += 1
 
 def process_output(statement):
