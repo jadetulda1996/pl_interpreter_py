@@ -36,6 +36,7 @@ def getStatementType(statement):
 		return "OUTPUT"
 	elif validate.isAssignment(statement):
 		return "ASSIGNMENT"
+
 	else:
 		return "INVALID"
 
@@ -187,7 +188,7 @@ def process_vardec(statement):
 				value = expression[1].strip()
 				dictionary[identifier] = value
 			else:
-				dictionary[token] = ''
+				dictionary[token.strip()] = validate.getDefaultValue(statement.split(' ')[-1])
 		print(temp)
 		#print("Dictionary content after process_vardec : " + repr(dictionary))
 
