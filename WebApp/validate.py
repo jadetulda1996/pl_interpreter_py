@@ -93,8 +93,7 @@ def isVarDeclaration(statement):
 		identifierTokens = temp.split(",") #split multiple declared identifiers
 	else:
 		identifierTokens.append(temp) #single identifier declared
-	print(identifierTokens)
-	print(varDeclarations)
+
 	if(identifierTokens):
 		for varToken in identifierTokens:
 			value = ""
@@ -210,6 +209,9 @@ def isBoolean(statement):
 
 	else:
 		return isBooleanExp(statement)
+
+def clearvarDeclarations():
+	varDeclarations.clear()
 	# regex pattern composition:
 		# ^								=> start
 		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)
