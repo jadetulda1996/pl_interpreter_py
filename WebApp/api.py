@@ -36,6 +36,8 @@ def getStatementType(statement):
 		return "OUTPUT"
 	elif validate.isAssignment(statement):
 		return "ASSIGNMENT"
+	elif validate.isExpression(statement):
+		return a
 	else:
 		return "INVALID"
 

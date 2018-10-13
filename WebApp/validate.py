@@ -117,11 +117,6 @@ def isVarDeclaration(statement):
 				if(identifier in varDeclarations):
 					return False
 
-				value = getDefaultValue(varType)
-				varDeclarations[identifier] = value
-
-	print("varDec: " + repr(varDeclarations))
-
 	allowedData		= "(\-?\d+|\-?\d*(\.\d+)?|\'\w?\.?\'|TRUE|FALSE)"
 	requiredDec 	= "VAR\s"+identifierSyntax
 	optDec			= "(\s*=\s*"+allowedData+")?(\s*,\s*"+identifierSyntax+"(\s*=\s*"+allowedData+")?)*\s"
