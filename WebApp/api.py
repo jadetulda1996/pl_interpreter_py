@@ -48,9 +48,14 @@ def parseStatement(statements):
 	output = ""
 	isValid = True
 	hasIF = False
+	hasElse = True
 	hasStartedIF = False
+	hasStartedElse = False
 
 	for statement in statements:
+
+		print(linenumber)
+
 		if(re.match("^INVALID", statement)):
 			isValid = False
 			output = "Syntax error in line " + repr(linenumber)
@@ -75,24 +80,39 @@ def parseStatement(statements):
 		elif(re.match('^KEYWORD:START$', statement)):
 			if(hasStarted == False):
 				hasStarted = True 	# <-- main START
-				print("hasStarted: " + repr(hasStarted))
+				linenumber += 1
+				continue
 
-			if(hasIF == True):
+			if(hasIF == True and hasStartedIF != True and hasStarted == True):
 				hasStartedIF = True 	# <-- for any IF Statement starting point
-				print("hasStartedIF: " + repr(hasStartedIF))
 			else:
-				print("hasStartedIF: " + repr(hasStartedIF))
+				isValid = False
+				output = "Invalid 'START' statement in line " + repr(linenumber)
+				break
+
+			if(hasStarted):
+				if(hasIF):
+					if(hasStartedIF):
+						isValid = False
+						output = "Invalid 'START' statement in line " + repr(linenumber)
+						break
 			# output = ""
 
 		elif(re.match('^KEYWORD:STOP$', statement)):
-			if(hasIF == True and hasStartedIF == False and hasStarted == True):
+			if(hasIF):
+				if(hasStartedIF):
+					hasStartedIF = False
+					hasIF = False
+
+			if(hasStarted):
+				if(not (hasIF and hasElse)):
+					if(not (hasStartedIF and hasStartedElse)):
+						hasStarted = False
+			else:
 				isValid = False
-				output = "Invalid stop statement in line " + repr(linenumber)
-				break
-			
-			if(hasStartedIF == True and hasStarted == True):
-				hasStartedIF = False
-				print("hasStartedIF: " + repr(hasStartedIF))
+				output = "Invalid 'STOP' statement in line " + repr(linenumber)
+				break				
+
 
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
@@ -117,23 +137,27 @@ def parseStatement(statements):
 				break;
 
 			hasIF = True
-			print("hasIF: " + repr(hasIF))
-			print("hasStartedIF: " + repr(hasStartedIF))
 			output = ""
 			process_conditionStruct()
 
 		elif(re.match("^KEYWORD:ELSE", statement)):
-			print(hasIF)
-			if(hasIF == False):
+			if(not hasStartedIF):
+				if(not hasIF):
+					hasElse = True
+			else:
 				isValid = False
-				output = "Incorrect use of ELSE statement in line " + repr(linenumber)
-				break;
-			hasIF = False
+				output = "Exptected 'STOP' before 'ELSE' statement in line " + repr(linenumber)
+				break
 			process_conditionStruct()
 
 		if not isValid: # insert "elif" above this line
 			output += "\nError was found in line : " + repr(linenumber)
 			break
+
+
+		print("hasStarted:" + repr(hasStarted))
+		print("hasIF:" + repr(hasIF))
+		print("hasStartedIF:" + repr(hasStartedIF))
 		linenumber += 1
 
 def process_output(statement):
