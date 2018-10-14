@@ -8,7 +8,7 @@ isValid = True
 def cfpl_tokenize(code):
 	global output	
 	statements = code.split("\n")
-	print("From cfpl_tokenize (data: statements): "+repr(statements))
+	# print("From cfpl_tokenize (data: statements): "+repr(statements))
 	tokens = list()
 	for statement in statements:
 		if(statement):
@@ -36,8 +36,10 @@ def getStatementType(statement):
 		return "OUTPUT"
 	elif validate.isAssignment(statement):
 		return "ASSIGNMENT"
-	elif validate.isExpression(statement):
-		return a
+	elif validate.isIFExpression(statement):
+		return "IF_EXPR"
+	elif validate.isElseExpression(statement):
+		return "ELSE_EXPR"
 	else:
 		return "INVALID"
 
@@ -49,13 +51,13 @@ def parseStatement(statements):
 	linenumber = 1
 	output = ""
 	isValid = True
-	hasIF = False
-	hasElse = True
-	hasStartedIF = False
-	hasStartedElse = False
+	hasIfDeclare = False
+	hasIfStarted = False
+	hasElseDeclare = False
+	hasElseStarted = False
 
 	for statement in statements:
-
+		# print(statements[linenumber-1])
 		print(linenumber)
 
 		if(re.match("^INVALID", statement)):
@@ -70,58 +72,16 @@ def parseStatement(statements):
 				break
 			# more work here for VARDEC
 			process_vardec(statement)
-			output = ""
 
-		# elif(re.match('^KEYWORD:START$', statement)):
-		# 	if(hasStarted):
-		# 		isValid = False
-		# 		output = "Invalid start statement in line " + repr(linenumber)
-		# 		break
-		# 	hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
-			
-		elif(re.match('^KEYWORD:START$', statement)):
-			if(hasStarted == False):
-				hasStarted = True 	# <-- main START
-				linenumber += 1
-				continue
-
-			if(hasIF == True and hasStartedIF != True and hasStarted == True):
-				hasStartedIF = True 	# <-- for any IF Statement starting point
-			else:
-				isValid = False
-				output = "Invalid 'START' statement in line " + repr(linenumber)
-				break
-
-			if(hasStarted):
-				if(hasIF):
-					if(hasStartedIF):
-						isValid = False
-						output = "Invalid 'START' statement in line " + repr(linenumber)
-						break
-			# output = ""
-
-		elif(re.match('^KEYWORD:STOP$', statement)):
-			if(hasIF):
-				if(hasStartedIF):
-					hasStartedIF = False
-					hasIF = False
-
-			if(hasStarted):
-				if(not (hasIF and hasElse)):
-					if(not (hasStartedIF and hasStartedElse)):
-						hasStarted = False
-			else:
-				isValid = False
-				output = "Invalid 'STOP' statement in line " + repr(linenumber)
-				break				
-
+		# elif(re.match('^KEYWORD:STOP$', statement)):
+		# 	if(hasStarted and hasIfDeclare)
 
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid output statement in line " + repr(linenumber)
 				break
-			output = ""
+			#output = ""
 			process_output(statement)
 			# more work here for OUTPUT
 
@@ -130,36 +90,95 @@ def parseStatement(statements):
 				isValid = False
 				output = "Invalid assignment statement in line " + repr(linenumber)
 				break
-			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
+			process_assignment(statement)
 		
-		elif(re.match('^KEYWORD:IF', statement)):
+		elif(re.match('^IF_EXPR', statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid IF statement in line " + repr(linenumber)
-				break;
-
-			hasIF = True
-			output = ""
-			process_conditionStruct()
-
-		elif(re.match("^KEYWORD:ELSE", statement)):
-			if(not hasStartedIF):
-				if(not hasIF):
-					hasElse = True
-			else:
-				isValid = False
-				output = "Exptected 'STOP' before 'ELSE' statement in line " + repr(linenumber)
 				break
-			process_conditionStruct()
+			else:
+				if(not hasIfDeclare):
+					hasIfDeclare = True
+					# print('hasIfDeclare: '+repr(hasIfDeclare))
+				else:
+					isValid = False
+					output = "Invalid token 'IF' statement in line " + repr(linenumber)
+					break
+
+			output = ""
+		
+		elif(re.match('^ELSE_EXPR', statement)):
+			if(not hasIfDeclare):
+				isValid = False
+				output = "Invalid ELSE statement in line " + repr(linenumber)
+				break
+			else:
+				if(not hasIfStarted):
+					hasIfDeclare = False
+					hasElseDeclare = True
+					print("if is closed")
+					print("else declared")
+				else:
+					isValid = False
+					output = "Expected 'STOP' keyword before else in line " + repr(linenumber)
+					break
+
+			output = ""
+
+		elif(hasIfDeclare):
+			if(re.match('^KEYWORD:START$', statement)):
+				if(hasIfStarted):
+					isValid = False
+					output = "Invalid token 'START' in line " + repr(linenumber)
+					break
+				else:
+					hasIfStarted = True
+					process_controlStructure(statement)
+					# print('hasIfStarted: ' + repr(hasIfStarted))
+
+			if(re.match('^KEYWORD:STOP$', statement)):
+				print(hasIfStarted)
+				if(not hasIfStarted):
+					isValid = False
+					output = "Expected keyword 'START' in line " + repr(linenumber)
+					break
+				else:
+					hasIfStarted = False
+
+		elif(hasElseDeclare):
+			if(re.match('^KEYWORD:START$', statement)):
+				if(hasElseStarted):
+					isValid = False
+					output = "Invalid token 'START' in line " + repr(linenumber)
+					break
+				else:
+					hasElseStarted = True
+					print("else started")
+					process_controlStructure(statement)
+
+
+			if(re.match('^KEYWORD:STOP$', statement)):
+				if(not hasElseStarted):
+					isValid = False
+					output = "Expected keyword 'START' in line " + repr(linenumber)
+					break
+				else:
+					hasElseStarted = False
+					hasElseDeclare = False
+			
+		elif(re.match('^KEYWORD:START$', statement)):
+			if(hasStarted == True):
+				isValid = False
+				output = "Invalid 'START' statement in line " + repr(linenumber)
+				break
+
+			hasStarted = True
 
 		if not isValid: # insert "elif" above this line
 			output += "\nError was found in line : " + repr(linenumber)
 			break
 
-
-		print("hasStarted:" + repr(hasStarted))
-		print("hasIF:" + repr(hasIF))
-		print("hasStartedIF:" + repr(hasStartedIF))
 		linenumber += 1
 
 def process_output(statement):
@@ -181,7 +200,7 @@ def process_vardec(statement):
 		temp = re.sub("VARDEC:VAR|AS|INT|CHAR|BOOL|FLOAT", "", statement).strip()
 		# now only relevant text remains, lets split
 		tokens = temp.split(',')
-		print("From processVarDec (data: tokens): "+repr(tokens))
+		# print("From processVarDec (data: tokens): "+repr(tokens))
 		for token in tokens:
 			if "=" in token:
 				expression = token.split('=')
@@ -189,8 +208,8 @@ def process_vardec(statement):
 				value = expression[1].strip()
 				dictionary[identifier] = value
 			else:
-				dictionary[token] = ''
-		print(temp)
+				dictionary[token.strip()] = validate.getDefaultValue(statement.split(' ')[-1])
+		# print(temp)
 		#print("Dictionary content after process_vardec : " + repr(dictionary))
 
 def process_assignment(statement):
@@ -220,9 +239,8 @@ def process_assignment(statement):
 					break
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
-def process_conditionStruct():
+def process_controlStructure(statement):
 	return True
-
 
 #REGEX SYMBOL GUIDE
 # * 	- 0 or more

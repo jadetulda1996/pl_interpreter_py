@@ -8,7 +8,7 @@ datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
 identifierSyntax = "(_?[a-zA-Z]+\d*){1,30}" #<-- "_" should be followed by a letter
 arithOps_regex = "[\+\-\*\/\%]"
 number = "(\-?\d*\.?\d+)"
-boolOps = "(\>|\<|(\>\=)|(\<\=)|(\=\=)|(\<\>))"
+boolOps = "((\>\=)|(\<\=)|(\=\=)|(\<\>)|\>|\<)"
 logicOps = "(AND|OR|NOT)"
 varDeclarations = {}
 
@@ -41,7 +41,7 @@ def isComment(statement):
 
 def isKeyword(token):
 	#return token in keyword
-	return re.match("^(VAR|AS|START|STOP|IF|ELSE)$", token)
+	return re.match("^(VAR|AS|START|STOP)$", token)
 
 def isDatatype(token):
 	return token in datatype
@@ -151,28 +151,21 @@ def isAssignment(statement):
 	#To get the value of the identifier to be validated
 	temp = statement
 
-	if(re.search("=",temp)):
+	if(re.search("=",temp) and not re.search("IF",temp)):
 		value = temp.split("=", 1)[1] # remove identifier and its first "=" occurence
 
-		if(isArithmeticExp(value)):
+		if(isArithmeticExp(value.strip())):
 			return True
-		elif(isBoolean(value)):
+		elif(isBoolean(value.strip())):
 			return True
 
 		allowedData 			= "('\w+')|"+identifierSyntax+"|"+number+"|"
-		firstAssignment			= identifierSyntax+"\s*={1}\s*("+allowedData+")"
+		firstAssignment			= identifierSyntax+"\s?={1}\s?("+allowedData+")"
 		addtnAssignment_opt		= "("+identifierSyntax+"={1}("+allowedData+"))*"
 		regPattern				= "^"+firstAssignment+addtnAssignment_opt+"$"
 		return re.match(regPattern,statement)
 	else:
 		return False
-
-	#Note: Check variable declaration on top (in process_assignment function)
-
-	#sample data:
-		# 1=1 or '1'=1 or 1=a		=> error: can't assign value to a non-identifier
-		# a=1 or a=a or a=-1		=> success: identifier = data(+ or -) or identifier
-		# a==a 						=> error: is not an assignment operator
 
 def isExpression(statement):
 	return re.match(regPattern,statement)
@@ -188,18 +181,20 @@ def isArithmeticExp(statement):
 def isBooleanExp(statement):
 	allowedData					= "("+identifierSyntax+"|"+number+")"
 	singleBoolExp				= "("+allowedData+"\s?"+boolOps+"\s?"+allowedData+")"
-	addtnBoolExp_opt			= "("+boolOps+allowedData+")*"
+	addtnBoolExp_opt			= "(\s?"+boolOps+"\s?"+allowedData+")*"
 	multiBoolExp				= "("+singleBoolExp+addtnBoolExp_opt+")"
 	regPattern					= "^("+multiBoolExp+")$"
+
 	return re.match(regPattern,statement)
 
 def isBoolean(statement):
 	if(re.search(logicOps, statement)):
 		allowedData					= "("+identifierSyntax+"|"+number+")"
-		singleBoolOpr				= "("+allowedData+"\s"+logicOps+"\s"+allowedData+")"
-		addtnBoolOpr_opt			= "(\s"+logicOps+"\s"+allowedData+")*"
+		singleBoolOpr				= "("+allowedData+"\s?"+logicOps+"\s"+allowedData+")"
+		addtnBoolOpr_opt			= "(\s?"+logicOps+"\s?"+allowedData+")*"
 		multiBoolOpr				= "("+singleBoolOpr+addtnBoolOpr_opt+")"
 		regPattern					= "^("+multiBoolOpr+")$"
+
 		return re.match(regPattern,statement)
 
 	else:
@@ -207,15 +202,17 @@ def isBoolean(statement):
 
 def clearvarDeclarations():
 	varDeclarations.clear()
-	# regex pattern composition:
-		# ^								=> start
-		# (\-?(\d*\.?\d+)				=> will match: 1, 0.1, .1 (negative or positve)
-		# arithOps_regex ([\+\-\*\/\%])	=> single operator only
-		# $								=> end
 
-	# sample data:
-		# 1+a10.			=> error: has "." on last statement
-		# -1+-1				=> success: negative + negative
-		# 0.1-1				=> success: (+)decimal - (+)
-		# a+1 or 1+a		=> success: identifier + number (and vice versa)
-		# a+2+4+1--0.1		=> success: can detect multiple operation
+def isIFExpression(statement):
+	boolExp = re.sub("^IF\s?\(|\)$", "", statement)
+	ifSyntax = re.sub("[^(IF\s?\(|\s*|\)$)]*", "", statement)
+	ifsynt = re.sub("\s*", "", ifSyntax)
+	isBoolExpr = isBoolean(boolExp)
+
+	if(isBoolExpr):
+		return re.match("^IF\s?\(\)$", ifsynt)
+	else:
+		return False
+
+def isElseExpression(statement):
+	return re.match('^ELSE$', statement)
