@@ -1,5 +1,6 @@
 import re
 from . import validate
+from . import constant
 
 output = ""
 dictionary = {}
@@ -46,6 +47,7 @@ def getStatementType(statement):
 def parseStatement(statements):
 	global output
 	global isValid
+
 	hasStarted = False
 	hasStop = False
 	linenumber = 1
@@ -57,8 +59,6 @@ def parseStatement(statements):
 	hasElseStarted = False
 
 	for statement in statements:
-		# print(statements[linenumber-1])
-		print(linenumber)
 
 		if(re.match("^INVALID", statement)):
 			isValid = False
@@ -99,14 +99,13 @@ def parseStatement(statements):
 				break
 			else:
 				if(not hasIfDeclare):
+					output = ""
+					process_controlStructure(statement)
 					hasIfDeclare = True
-					# print('hasIfDeclare: '+repr(hasIfDeclare))
 				else:
 					isValid = False
 					output = "Invalid token 'IF' statement in line " + repr(linenumber)
 					break
-
-			output = ""
 		
 		elif(re.match('^ELSE_EXPR', statement)):
 			if(not hasIfDeclare):
@@ -117,8 +116,6 @@ def parseStatement(statements):
 				if(not hasIfStarted):
 					hasIfDeclare = False
 					hasElseDeclare = True
-					print("if is closed")
-					print("else declared")
 				else:
 					isValid = False
 					output = "Expected 'STOP' keyword before else in line " + repr(linenumber)
@@ -134,17 +131,22 @@ def parseStatement(statements):
 					break
 				else:
 					hasIfStarted = True
-					process_controlStructure(statement)
-					# print('hasIfStarted: ' + repr(hasIfStarted))
 
 			if(re.match('^KEYWORD:STOP$', statement)):
-				print(hasIfStarted)
 				if(not hasIfStarted):
 					isValid = False
 					output = "Expected keyword 'START' in line " + repr(linenumber)
 					break
 				else:
 					hasIfStarted = False
+
+					try:
+						if(not re.match('^ELSE_EXPR', statements[linenumber])):
+							hasIfDeclare = False
+					except Exception as e:
+						isValid = False
+						output = "Expected keyword 'STOP' in line " + repr(linenumber)
+						break
 
 		elif(hasElseDeclare):
 			if(re.match('^KEYWORD:START$', statement)):
@@ -154,7 +156,6 @@ def parseStatement(statements):
 					break
 				else:
 					hasElseStarted = True
-					print("else started")
 					process_controlStructure(statement)
 
 
@@ -216,6 +217,7 @@ def process_assignment(statement):
 	global output
 	global dictionary
 	global isValid
+
 	if(statement):
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
 		tokens = temp.split('=')
@@ -240,19 +242,64 @@ def process_assignment(statement):
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
 def process_controlStructure(statement):
-	return True
+	global output
+	global isValid
+	opsUsed = []
+	result = True
 
-#REGEX SYMBOL GUIDE
-# * 	- 0 or more
-# \s 	- [ \t\n\r\f\v] -> matches any whitespace
-# \S 	- [^ \t\n\r\f\v] -> matches any non-whitespace
-# \w    - [_a-zA-Z0-9] matches any alphanumeric
-# \W    - [^a-zA-Z0-9_] matches any non-alphanumeric
-# \d 	- [0-9] matches number
-# ?		- 0 or 1
-# +		- 1 or more
-# ^		- starts with
-# $		- end of regex (grammar)
-# {}	- length (min, max) syntax: [pattern]{1,1} -> where [pattern] is grouped
-# []	- range of pattern
-# ()	- capture group
+	boolOps = constant.getBoolOps()
+	logicOps = constant.getLogicOps()
+
+	boolExp = validate.getIF_expr_Param(statement, 2)
+	ifParamIdentifiers = re.split("\s["+boolOps+"|"+logicOps+"]*\s", boolExp)
+	boolOps_Used = re.split("\s", boolExp)
+
+	for ops in boolOps_Used:							# <-- get operator used
+		if(re.match(boolOps+"|"+logicOps, ops)):
+			opsUsed.append(ops)
+
+	for param in ifParamIdentifiers:					# <-- check if identifier exists
+		if(not checkIfParamIdentifier(param)):
+			output = "Error : Undefined variable : " + repr(param)
+			isValid = False
+			break
+		else:
+			if(dictionary[param] == "FALSE"):
+				dictionary[param] = False
+			else:
+				dictionary[param] = True
+
+	# print(dictionary)
+	for index in range(0, len(opsUsed)):	#range(start, iterations)
+		if(index == 0):
+			if(opsUsed[index] == "AND"):
+				result = (dictionary[ifParamIdentifiers[index]] and dictionary[ifParamIdentifiers[index+1]])
+				print(str(index+1) + " iteration: " + repr(result))
+
+			elif(opsUsed[index] == "OR"):
+				result = (dictionary[ifParamIdentifiers[index]] or dictionary[ifParamIdentifiers[index+1]])
+				print(str(index+1) + " iteration: " + repr(result))
+
+			if(not result):
+				print(False)
+				break
+
+		elif(index > 0):
+			if(opsUsed[index] == "AND"):
+				result = (result and dictionary[ifParamIdentifiers[index+1]])
+				print(str(index+1) + " iteration: " + repr(result))
+				
+			elif(opsUsed[index] == "OR"):
+				result = (result or dictionary[ifParamIdentifiers[index+1]])
+				print(str(index+1) + " iteration: " + repr(result))
+
+			if(not result):
+				print(False)
+				break
+
+
+def checkIfParamIdentifier(param):
+	if param in dictionary.keys():
+		return True
+
+	return False

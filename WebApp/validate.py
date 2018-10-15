@@ -1,16 +1,19 @@
 import re
+from . import constant
 
 keyword = ["VAR", "AS", "START", "STOP"]
 arithmetic_operators = ["(", ")", "*", "/", "%", "+", "-", ">", "<", ">=", "<=", "==", "<>"]
 assignment_operators = ["="]
 logical_operators = ["AND", "OR", "NOT"]
 datatype = ["INT", "CHAR", "BOOL", "FLOAT"]
-identifierSyntax = "(_?[a-zA-Z]+\d*){1,30}" #<-- "_" should be followed by a letter
-arithOps_regex = "[\+\-\*\/\%]"
-number = "(\-?\d*\.?\d+)"
-boolOps = "((\>\=)|(\<\=)|(\=\=)|(\<\>)|\>|\<)"
-logicOps = "(AND|OR|NOT)"
 varDeclarations = {}
+
+identifierSyntax = constant.getIdentifierSyntax()
+arithOps_regex = constant.getArithOps_Regex()
+number = constant.getNumber()
+boolOps = constant.getBoolOps()
+logicOps = constant.getLogicOps()
+
 
 def checkTokenType(token):
 	tokentype = ""
@@ -116,6 +119,8 @@ def isVarDeclaration(statement):
 
 				if(identifier in varDeclarations):
 					return False
+				else:
+					varDeclarations[identifier] = getDefaultValue(varType)
 
 	allowedData		= "(\-?\d+|\-?\d*(\.\d+)?|\'\w?\.?\'|TRUE|FALSE)"
 	requiredDec 	= "VAR\s"+identifierSyntax
@@ -204,9 +209,11 @@ def clearvarDeclarations():
 	varDeclarations.clear()
 
 def isIFExpression(statement):
-	boolExp = re.sub("^IF\s?\(|\)$", "", statement)
+	boolExp = getIF_expr_Param(statement, 1)
+
 	ifSyntax = re.sub("[^(IF\s?\(|\s*|\)$)]*", "", statement)
 	ifsynt = re.sub("\s*", "", ifSyntax)
+	
 	isBoolExpr = isBoolean(boolExp)
 
 	if(isBoolExpr):
@@ -216,3 +223,9 @@ def isIFExpression(statement):
 
 def isElseExpression(statement):
 	return re.match('^ELSE$', statement)
+
+def getIF_expr_Param(statement, flag): #flag means where the request comes from
+	if(flag == 1): #means inside request
+		return re.sub("^IF\s?\(|\)$", "", statement)
+	else:
+		return re.sub("^IF_EXPR:IF\s?\(|\)$", "", statement)
