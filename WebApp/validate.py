@@ -33,7 +33,7 @@ def checkTokenType(token):
 
 def isOutput(statement):
 	# validate OUTPUT statement syntax using regex
-	return re.match('^OUTPUT:\s\w', statement)
+	return re.match('^OUTPUT:\s(\w|#)', statement)
 
 def isComment(statement):
 	# returns: COMMENT
