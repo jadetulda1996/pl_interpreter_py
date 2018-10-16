@@ -62,7 +62,12 @@ def parseStatement(statements):
 
 	for statement in statements:
 
-		if(re.match("^INVALID", statement)):
+		if not (re.match('^KEYWORD:STOP$', statements[-1])):
+			isValid = False
+			output = "Invalid end of program."
+			break
+
+		elif(re.match("^INVALID", statement)):
 			isValid = False
 			output = "Syntax error in line " + repr(linenumber)
 			break
@@ -248,7 +253,7 @@ def process_assignment(statement):
 			for token in tokens[:-1]:
 				identifier = token.strip()
 				if identifier in dictionary.keys():
-					dictionary[identifier] = value.replace("\'","")
+					dictionary[identifier] = str(value).replace("\'","")
 				else:
 					output = "Error : Undefined variable : " + repr(identifier)
 					isValid = False
