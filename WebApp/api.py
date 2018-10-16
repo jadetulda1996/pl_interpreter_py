@@ -1,5 +1,6 @@
 import re
 from . import validate
+from . import constant
 
 output = ""
 dictionary = {}
@@ -8,7 +9,7 @@ isValid = True
 def cfpl_tokenize(code):
 	global output	
 	statements = code.split("\n")
-	print("From cfpl_tokenize (data: statements): "+repr(statements))
+	# print("From cfpl_tokenize (data: statements): "+repr(statements))
 	tokens = list()
 	for statement in statements:
 		if(statement):
@@ -36,28 +37,30 @@ def getStatementType(statement):
 		return "OUTPUT"
 	elif validate.isAssignment(statement):
 		return "ASSIGNMENT"
-
+	elif validate.isIFExpression(statement):
+		return "IF_EXPR"
+	elif validate.isElseExpression(statement):
+		return "ELSE_EXPR"
 	else:
 		return "INVALID"
 
 def parseStatement(statements):
 	global output
 	global isValid
+
 	hasStarted = False
 	hasStop = False
 	linenumber = 1
 	output = ""
 	isValid = True
-	hasIF = False
-	hasElse = True
-	hasStartedIF = False
-	hasStartedElse = False
+	hasIfDeclare = False
+	hasIfStarted = False
+	hasElseDeclare = False
+	hasElseStarted = False
 
 	print(statements[-1])
 
 	for statement in statements:
-
-		print(linenumber)
 
 		if(re.match("^INVALID", statement)):
 			isValid = False
@@ -71,51 +74,9 @@ def parseStatement(statements):
 				break
 			# more work here for VARDEC
 			process_vardec(statement)
-			#output = ""
 
-		# elif(re.match('^KEYWORD:START$', statement)):
-		# 	if(hasStarted):
-		# 		isValid = False
-		# 		output = "Invalid start statement in line " + repr(linenumber)
-		# 		break
-		# 	hasStarted = True	# <-- this line is out of scope: statement after "break" pls verify is correct
-			
-		elif(re.match('^KEYWORD:START$', statement)):
-			if(hasStarted == False):
-				hasStarted = True 	# <-- main START
-				linenumber += 1
-				continue
-
-			if(hasIF == True and hasStartedIF != True and hasStarted == True):
-				hasStartedIF = True 	# <-- for any IF Statement starting point
-			else:
-				isValid = False
-				output = "Invalid 'START' statement in line " + repr(linenumber)
-				break
-
-			if(hasStarted):
-				if(hasIF):
-					if(hasStartedIF):
-						isValid = False
-						output = "Invalid 'START' statement in line " + repr(linenumber)
-						break
-			# output = ""
-
-		elif(re.match('^KEYWORD:STOP$', statement)):
-			if(hasIF):
-				if(hasStartedIF):
-					hasStartedIF = False
-					hasIF = False
-
-			if(hasStarted):
-				if(not (hasIF and hasElse)):
-					if(not (hasStartedIF and hasStartedElse)):
-						hasStarted = False
-			else:
-				isValid = False
-				output = "Invalid 'STOP' statement in line " + repr(linenumber)
-				break				
-
+		# elif(re.match('^KEYWORD:STOP$', statement)):
+		# 	if(hasStarted and hasIfDeclare)
 
 		elif(re.match("^OUTPUT", statement)):
 			if(hasStarted == False):
@@ -131,36 +92,96 @@ def parseStatement(statements):
 				isValid = False
 				output = "Invalid assignment statement in line " + repr(linenumber)
 				break
-			process_assignment(statement) # <-- (this is correct) this line is out of scope: statement after "break" pls verify is correct
+			process_assignment(statement)
 		
-		elif(re.match('^KEYWORD:IF', statement)):
+		elif(re.match('^IF_EXPR', statement)):
 			if(hasStarted == False):
 				isValid = False
 				output = "Invalid IF statement in line " + repr(linenumber)
-				break;
-
-			hasIF = True
-			output = ""
-			process_conditionStruct()
-
-		elif(re.match("^KEYWORD:ELSE", statement)):
-			if(not hasStartedIF):
-				if(not hasIF):
-					hasElse = True
-			else:
-				isValid = False
-				output = "Exptected 'STOP' before 'ELSE' statement in line " + repr(linenumber)
 				break
-			process_conditionStruct()
+			else:
+				if(not hasIfDeclare):
+					output = ""
+					process_controlStructure(statement)
+					hasIfDeclare = True
+				else:
+					isValid = False
+					output = "Invalid token 'IF' statement in line " + repr(linenumber)
+					break
+		
+		elif(re.match('^ELSE_EXPR', statement)):
+			if(not hasIfDeclare):
+				isValid = False
+				output = "Invalid ELSE statement in line " + repr(linenumber)
+				break
+			else:
+				if(not hasIfStarted):
+					hasIfDeclare = False
+					hasElseDeclare = True
+				else:
+					isValid = False
+					output = "Expected 'STOP' keyword before else in line " + repr(linenumber)
+					break
+
+			output = ""
+
+		elif(hasIfDeclare):
+			if(re.match('^KEYWORD:START$', statement)):
+				if(hasIfStarted):
+					isValid = False
+					output = "Invalid token 'START' in line " + repr(linenumber)
+					break
+				else:
+					hasIfStarted = True
+
+			if(re.match('^KEYWORD:STOP$', statement)):
+				if(not hasIfStarted):
+					isValid = False
+					output = "Expected keyword 'START' in line " + repr(linenumber)
+					break
+				else:
+					hasIfStarted = False
+
+					try:
+						if(not re.match('^ELSE_EXPR', statements[linenumber])):
+							hasIfDeclare = False
+					except Exception as e:
+						isValid = False
+						output = "Expected keyword 'STOP' in line " + repr(linenumber)
+						break
+
+		elif(hasElseDeclare):
+			if(re.match('^KEYWORD:START$', statement)):
+				if(hasElseStarted):
+					isValid = False
+					output = "Invalid token 'START' in line " + repr(linenumber)
+					break
+				else:
+					hasElseStarted = True
+					process_controlStructure(statement)
+
+
+			if(re.match('^KEYWORD:STOP$', statement)):
+				if(not hasElseStarted):
+					isValid = False
+					output = "Expected keyword 'START' in line " + repr(linenumber)
+					break
+				else:
+					hasElseStarted = False
+					hasElseDeclare = False
+			
+		elif(re.match('^KEYWORD:START$', statement)):
+			if(hasStarted == True):
+				isValid = False
+				output = "Invalid 'START' statement in line " + repr(linenumber)
+				break
+
+			hasStarted = True
 
 		if not isValid: # insert "elif" above this line
 			output += "\nError was found in line : " + repr(linenumber)
 			break
 
-
-		print("hasStarted:" + repr(hasStarted))
-		print("hasIF:" + repr(hasIF))
-		print("hasStartedIF:" + repr(hasStartedIF))
 		linenumber += 1
 
 def process_output(statement):
@@ -192,7 +213,7 @@ def process_vardec(statement):
 		temp = re.sub("VARDEC:VAR|AS|INT|CHAR|BOOL|FLOAT", "", statement).strip()
 		# now only relevant text remains, lets split
 		tokens = temp.split(',')
-		print("From processVarDec (data: tokens): "+repr(tokens))
+		# print("From processVarDec (data: tokens): "+repr(tokens))
 		for token in tokens:
 			if "=" in token:
 				expression = token.split('=')
@@ -201,13 +222,14 @@ def process_vardec(statement):
 				dictionary[identifier] = value.replace("\'","")
 			else:
 				dictionary[token.strip()] = validate.getDefaultValue(statement.split(' ')[-1])
-		print(temp)
+		# print(temp)
 		#print("Dictionary content after process_vardec : " + repr(dictionary))
 
 def process_assignment(statement):
 	global output
 	global dictionary
 	global isValid
+
 	if(statement):
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
 		tokens = temp.split('=')
@@ -233,21 +255,65 @@ def process_assignment(statement):
 					break
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
-def process_conditionStruct():
-	return True
+def process_controlStructure(statement):
+	global output
+	global isValid
+	opsUsed = []
+	result = True
+
+	boolOps = constant.getBoolOps()
+	logicOps = constant.getLogicOps()
+
+	boolExp = validate.getIF_expr_Param(statement, 2)
+	ifParamIdentifiers = re.split("\s["+boolOps+"|"+logicOps+"]*\s", boolExp)
+	boolOps_Used = re.split("\s", boolExp)
+
+	for ops in boolOps_Used:							# <-- get operator used
+		if(re.match(boolOps+"|"+logicOps, ops)):
+			opsUsed.append(ops)
+
+	for param in ifParamIdentifiers:					# <-- check if identifier exists
+		if(not checkIfParamIdentifier(param)):
+			output = "Error : Undefined variable : " + repr(param)
+			isValid = False
+			break
+		else:
+			if(dictionary[param] == "FALSE"):
+				dictionary[param] = False
+			else:
+				dictionary[param] = True
+
+	# print(dictionary)
+	for index in range(0, len(opsUsed)):	#range(start, iterations)
+		if(index == 0):
+			if(opsUsed[index] == "AND"):
+				result = (dictionary[ifParamIdentifiers[index]] and dictionary[ifParamIdentifiers[index+1]])
+				print(str(index+1) + " iteration: " + repr(result))
+
+			elif(opsUsed[index] == "OR"):
+				result = (dictionary[ifParamIdentifiers[index]] or dictionary[ifParamIdentifiers[index+1]])
+				print(str(index+1) + " iteration: " + repr(result))
+
+			if(not result):
+				print(False)
+				break
+
+		elif(index > 0):
+			if(opsUsed[index] == "AND"):
+				result = (result and dictionary[ifParamIdentifiers[index+1]])
+				print(str(index+1) + " iteration: " + repr(result))
+				
+			elif(opsUsed[index] == "OR"):
+				result = (result or dictionary[ifParamIdentifiers[index+1]])
+				print(str(index+1) + " iteration: " + repr(result))
+
+			if(not result):
+				print(False)
+				break
 
 
-#REGEX SYMBOL GUIDE
-# * 	- 0 or more
-# \s 	- [ \t\n\r\f\v] -> matches any whitespace
-# \S 	- [^ \t\n\r\f\v] -> matches any non-whitespace
-# \w    - [_a-zA-Z0-9] matches any alphanumeric
-# \W    - [^a-zA-Z0-9_] matches any non-alphanumeric
-# \d 	- [0-9] matches number
-# ?		- 0 or 1
-# +		- 1 or more
-# ^		- starts with
-# $		- end of regex (grammar)
-# {}	- length (min, max) syntax: [pattern]{1,1} -> where [pattern] is grouped
-# []	- range of pattern
-# ()	- capture group
+def checkIfParamIdentifier(param):
+	if param in dictionary.keys():
+		return True
+
+	return False
