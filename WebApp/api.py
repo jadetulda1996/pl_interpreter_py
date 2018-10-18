@@ -156,7 +156,7 @@ def parseStatement(statements):
 					break
 				else:
 					hasElseStarted = True
-					process_controlStructure(statement)
+					print("just here")
 
 
 			if(re.match('^KEYWORD:STOP$', statement)):
@@ -260,11 +260,12 @@ def process_controlStructure(statement):
 
 	for param in ifParamIdentifiers:					# <-- check if identifier exists
 		if(not checkIfParamIdentifier(param)):
+			print("from here")
 			output = "Error : Undefined variable : " + repr(param)
 			isValid = False
 			break
 		else:
-			if(dictionary[param] == "FALSE"):
+			if(dictionary[param] == "FALSE" or dictionary[param] == False):
 				dictionary[param] = False
 			else:
 				dictionary[param] = True
@@ -273,6 +274,8 @@ def process_controlStructure(statement):
 	for index in range(0, len(opsUsed)):	#range(start, iterations)
 		if(index == 0):
 			if(opsUsed[index] == "AND"):
+				print(dictionary[ifParamIdentifiers[index]])
+				print(dictionary[ifParamIdentifiers[index+1]])
 				result = (dictionary[ifParamIdentifiers[index]] and dictionary[ifParamIdentifiers[index+1]])
 				print(str(index+1) + " iteration: " + repr(result))
 
