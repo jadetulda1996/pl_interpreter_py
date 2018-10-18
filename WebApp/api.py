@@ -116,7 +116,7 @@ def parseStatement(statements):
 		
 		elif(re.match('^ELSE_EXPR', statement)):
 			if(not hasIfDeclare):
-				isValid = False
+				isValid = False 
 				output = "Invalid ELSE statement in line " + repr(linenumber)
 				break
 			else:
