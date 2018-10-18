@@ -58,9 +58,16 @@ def parseStatement(statements):
 	hasElseDeclare = False
 	hasElseStarted = False
 
+	print(statements[-1])
+
 	for statement in statements:
 
-		if(re.match("^INVALID", statement)):
+		if not (re.match('^KEYWORD:STOP$', statements[-1])):
+			isValid = False
+			output = "Invalid end of program."
+			break
+
+		elif(re.match("^INVALID", statement)):
 			isValid = False
 			output = "Syntax error in line " + repr(linenumber)
 			break
@@ -188,11 +195,21 @@ def process_output(statement):
 	global isValid
 	if(statement):
 		temp = re.sub("OUTPUT:", "", statement).strip()
-		if temp in dictionary.keys():
-			output = dictionary[temp]
-		else:
-			output = "Error : Unspecified variable : " + repr(temp)
-			isValid = False
+		tokens = temp.split('&')
+		print("from output")
+		print(tokens)
+		for token in tokens:
+			value = token.strip()
+			if validate.isIdentifier(value):
+				identifier = value
+				if identifier in dictionary.keys():
+					output += dictionary[identifier]
+				else:
+					output = "Error : Unspecified variable : " + repr(temp)
+					isValid = False
+					break
+			else:
+				output += value + "\ntest"
 
 def process_vardec(statement):
 	global dictionary
@@ -207,7 +224,7 @@ def process_vardec(statement):
 				expression = token.split('=')
 				identifier = expression[0].strip()
 				value = expression[1].strip()
-				dictionary[identifier] = value
+				dictionary[identifier] = value.replace("\'","")
 			else:
 				dictionary[token.strip()] = validate.getDefaultValue(statement.split(' ')[-1])
 		# print(temp)
@@ -229,12 +246,14 @@ def process_assignment(statement):
 			else:
 				output = "Error : Undefined variable : " + repr(value)
 				isValid = False
+		elif(validate.isArithmeticExp(value)):
+			value = eval(value)
 		
 		if(isValid):
 			for token in tokens[:-1]:
 				identifier = token.strip()
 				if identifier in dictionary.keys():
-					dictionary[identifier] = value
+					dictionary[identifier] = str(value).replace("\'","")
 				else:
 					output = "Error : Undefined variable : " + repr(identifier)
 					isValid = False
