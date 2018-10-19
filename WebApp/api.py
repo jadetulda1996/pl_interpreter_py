@@ -203,13 +203,13 @@ def process_output(statement):
 			if validate.isIdentifier(value):
 				identifier = value
 				if identifier in dictionary.keys():
-					output += dictionary[identifier]
+					output += str(dictionary[identifier])
 				else:
 					output = "Error : Unspecified variable : " + repr(temp)
 					isValid = False
 					break
 			else:
-				output += value + "\ntest"
+				output += str(value)
 
 def process_vardec(statement):
 	global dictionary
