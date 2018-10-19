@@ -1,4 +1,6 @@
 import re
+import copy
+
 from . import validate
 from . import constant
 
@@ -61,7 +63,7 @@ def parseStatement(statements):
 	print(statements[-1])
 
 	for statement in statements:
-
+		print(linenumber)
 		if not (re.match('^KEYWORD:STOP$', statements[-1])):
 			isValid = False
 			output = "Invalid end of program."
@@ -192,6 +194,8 @@ def parseStatement(statements):
 			output += "\nError was found in line : " + repr(linenumber)
 			break
 
+
+		print(dictionary)
 		linenumber += 1
 
 def process_output(statement):
@@ -232,6 +236,8 @@ def process_vardec(statement):
 				dictionary[identifier] = value.replace("\'","")
 			else:
 				dictionary[token.strip()] = validate.getDefaultValue(statement.split(' ')[-1])
+			
+		# print(dictionary)
 		# print(temp)
 		#print("Dictionary content after process_vardec : " + repr(dictionary))
 
@@ -269,8 +275,8 @@ def process_ifParamStatement(statement):
 	global output
 	global isValid
 	opsUsed = []
+	ifDictionary = copy.deepcopy(dictionary)		# <-- create a prototype of the dictionary for if statement purposes
 	result = True
-
 	boolOps = constant.getBoolOps()
 	logicOps = constant.getLogicOps()
 
@@ -281,40 +287,30 @@ def process_ifParamStatement(statement):
 	for ops in boolOps_Used:							# <-- get operator used
 		if(re.match(boolOps+"|"+logicOps, ops)):
 			opsUsed.append(ops)
-	# print(dictionary)
+
 	for param in ifParamIdentifiers:					# <-- check if identifier exists
-		if(not checkIfParamIdentifier(param)):
-			print("from here")
-			print(param)
+		if(not checkIfParamIdentifier(param, ifDictionary)):
 			output = "Error : Undefined variable : " + repr(param)
 			isValid = False
 			break
 		else:
-			if(dictionary[param] == "FALSE" or dictionary[param] == False):
-				dictionary[param] = False
+			if(ifDictionary[param] == "FALSE" or ifDictionary[param] == False):
+				ifDictionary[param] = False
 			else:
-				dictionary[param] = True
+				ifDictionary[param] = True
 	if(not isValid):
 		return False
 
-	print(dictionary)
-	print(ifParamIdentifiers)
 	for index in range(0, len(opsUsed)):
-		print(str(index+1) + " iteration")
 		if(re.match(logicOps, opsUsed[index])):
 			if(index == 0):
-				result = processParamLogicOps(opsUsed[index], ifParamIdentifiers)
+				result = processParamLogicOps(ifDictionary, opsUsed[index], ifParamIdentifiers)
 			else:
-				result = processParamLogicOps(opsUsed[index], ifParamIdentifiers)
+				result = processParamLogicOps(ifDictionary, opsUsed[index], ifParamIdentifiers)
 
-			print("--------------")
-			print("received result: "+repr(result))
-			
 			if(result):
-				dictionary[ifParamIdentifiers[0]] = result 			# <-- asign result to first index
+				ifDictionary[ifParamIdentifiers[0]] = result 			# <-- asign result to first index
 				del ifParamIdentifiers[1] 							# <-- delete 2nd index already evaluated
-				print(ifParamIdentifiers)
-				print(dictionary)
 			else:
 				print("break if\nfind else")
 				break
@@ -322,22 +318,18 @@ def process_ifParamStatement(statement):
 
 	# print(dictionary)
 
-def checkIfParamIdentifier(param):
-	if param in dictionary.keys():
+def checkIfParamIdentifier(param, ifDictionary):
+	if param in ifDictionary.keys():
 		return True
 
 	return False
 
-def processParamLogicOps(opsUsed, ifParamIdentifiers):
-	global dictionary
-
+def processParamLogicOps(ifDictionary, opsUsed, ifParamIdentifiers):
 	result = True
 
-	print("operator: " + str(opsUsed))
-
 	if(opsUsed == "AND"):
-		result = (dictionary[ifParamIdentifiers[0]] and dictionary[ifParamIdentifiers[0+1]])
+		result = (ifDictionary[ifParamIdentifiers[0]] and ifDictionary[ifParamIdentifiers[0+1]])
 	elif(opsUsed == "OR"):
-		result = (dictionary[ifParamIdentifiers[0]] or dictionary[ifParamIdentifiers[0+1]])
+		result = (ifDictionary[ifParamIdentifiers[0]] or ifDictionary[ifParamIdentifiers[0+1]])
 
 	return result

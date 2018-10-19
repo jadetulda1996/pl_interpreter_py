@@ -1,4 +1,4 @@
-identifierSyntax = "(_?[a-zA-Z]+\d*){1,30}" #<-- "_" should be followed by a letter
+identifierSyntax = "(_?[a-zA-Z_]+\d*){1,30}" #<-- "_" should be followed by a letter
 arithOps_regex = "[\+\-\*\/\%]"
 number = "(\-?\d*\.?\d+)"
 boolOps = "((\>\=)|(\<\=)|(\=\=)|(\<\>)|\>|\<)"

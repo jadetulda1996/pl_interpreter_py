@@ -56,8 +56,8 @@ def isArithmeticOperator(token):
 	return token in arithmetic_operators
 
 def isIdentifier(token):
-	print(re.match("^"+identifierSyntax+"$", token))
-	# return re.match(identifierSyntax, token)
+	# print(re.match("^"+identifierSyntax+"$", token))
+	return re.match(identifierSyntax, token)
 
 def isInteger32(token):	
 	if(re.search("\.", token)):
@@ -78,7 +78,7 @@ def isChar(token):
 	return False
 
 def isBool(token):
-	return re.match("^(TRUE|FALSE)$", token)
+	return re.match("^(\"TRUE\"|\"FALSE\")$", token)
 
 def getVarValue(token):
 	return token.split("=",1)[1].strip()
@@ -123,9 +123,9 @@ def isVarDeclaration(statement):
 				else:
 					varDeclarations[identifier] = getDefaultValue(varType)
 
-	allowedData		= "(\-?\d+|\-?\d*(\.\d+)?|\'\w?\.?\'|TRUE|FALSE)"
+	allowedData		= "(\-?\d+|\-?\d*(\.\d+)?|\'\w?\.?\'|\"TRUE\"|\"FALSE\")"
 	requiredDec 	= "VAR\s"+identifierSyntax
-	optDec			= "(\s*=\s*"+allowedData+")?(\s*,\s*"+identifierSyntax+"(\s*=\s*"+allowedData+")?)*\s"
+	optDec			= "(\s?=\s?"+allowedData+")?(\s?,\s?"+identifierSyntax+"(\s?=\s?"+allowedData+")?)*\s"
 	varDec 			= requiredDec+optDec
 	varType			= "AS\s(INT|CHAR|BOOL|FLOAT)"
 	regPattern = "^"+varDec+varType+"$"
@@ -150,7 +150,7 @@ def getDefaultValue(typeUsed):
 	elif(re.match("CHAR", typeUsed)):
 		return ""
 	elif(re.match("BOOL", typeUsed)):
-		return "FALSE"
+		return "\"FALSE\""
 
 def isAssignment(statement):
 
