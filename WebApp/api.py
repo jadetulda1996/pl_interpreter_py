@@ -67,6 +67,11 @@ def parseStatement(statements):
 			output = "Invalid end of program."
 			break
 
+		if(re.match('^KEYWORD:STOP', statement) and not hasStarted):
+			isValid = False
+			output = "Invalid keyword 'STOP' in line " + repr(linenumber)
+			break
+
 		elif(re.match("^INVALID", statement)):
 			isValid = False
 			output = "Syntax error in line " + repr(linenumber)
@@ -102,12 +107,12 @@ def parseStatement(statements):
 		elif(re.match('^IF_EXPR', statement)):
 			if(hasStarted == False):
 				isValid = False
-				output = "Invalid IF statement in line " + repr(linenumber)
+				output = "Invalid IF statement in line " + repr(linenumber) + "\nExpected keyword 'START'"
 				break
 			else:
 				if(not hasIfDeclare):
 					output = ""
-					process_controlStructure(statement)
+					process_ifParamStatement(statement)
 					hasIfDeclare = True
 				else:
 					isValid = False
@@ -239,7 +244,7 @@ def process_assignment(statement):
 		temp = re.sub("ASSIGNMENT:", "", statement).strip()
 		tokens = temp.split('=')
 		value = tokens[-1].strip() # element after the '=' operator
-		
+		# print(value)
 		if(validate.isIdentifier(value)):
 			if value in dictionary.keys():
 				value = dictionary[value]			
@@ -260,7 +265,7 @@ def process_assignment(statement):
 					break
 		print("Dictionary content after process_assignment : " + repr(dictionary))
 
-def process_controlStructure(statement):
+def process_ifParamStatement(statement):
 	global output
 	global isValid
 	opsUsed = []
@@ -276,10 +281,11 @@ def process_controlStructure(statement):
 	for ops in boolOps_Used:							# <-- get operator used
 		if(re.match(boolOps+"|"+logicOps, ops)):
 			opsUsed.append(ops)
-
+	# print(dictionary)
 	for param in ifParamIdentifiers:					# <-- check if identifier exists
 		if(not checkIfParamIdentifier(param)):
 			print("from here")
+			print(param)
 			output = "Error : Undefined variable : " + repr(param)
 			isValid = False
 			break
@@ -288,40 +294,50 @@ def process_controlStructure(statement):
 				dictionary[param] = False
 			else:
 				dictionary[param] = True
+	if(not isValid):
+		return False
+
+	print(dictionary)
+	print(ifParamIdentifiers)
+	for index in range(0, len(opsUsed)):
+		print(str(index+1) + " iteration")
+		if(re.match(logicOps, opsUsed[index])):
+			if(index == 0):
+				result = processParamLogicOps(opsUsed[index], ifParamIdentifiers)
+			else:
+				result = processParamLogicOps(opsUsed[index], ifParamIdentifiers)
+
+			print("--------------")
+			print("received result: "+repr(result))
+			
+			if(result):
+				dictionary[ifParamIdentifiers[0]] = result 			# <-- asign result to first index
+				del ifParamIdentifiers[1] 							# <-- delete 2nd index already evaluated
+				print(ifParamIdentifiers)
+				print(dictionary)
+			else:
+				print("break if\nfind else")
+				break
+
 
 	# print(dictionary)
-	for index in range(0, len(opsUsed)):	#range(start, iterations)
-		if(index == 0):
-			if(opsUsed[index] == "AND"):
-				print(dictionary[ifParamIdentifiers[index]])
-				print(dictionary[ifParamIdentifiers[index+1]])
-				result = (dictionary[ifParamIdentifiers[index]] and dictionary[ifParamIdentifiers[index+1]])
-				print(str(index+1) + " iteration: " + repr(result))
-
-			elif(opsUsed[index] == "OR"):
-				result = (dictionary[ifParamIdentifiers[index]] or dictionary[ifParamIdentifiers[index+1]])
-				print(str(index+1) + " iteration: " + repr(result))
-
-			if(not result):
-				print(False)
-				break
-
-		elif(index > 0):
-			if(opsUsed[index] == "AND"):
-				result = (result and dictionary[ifParamIdentifiers[index+1]])
-				print(str(index+1) + " iteration: " + repr(result))
-				
-			elif(opsUsed[index] == "OR"):
-				result = (result or dictionary[ifParamIdentifiers[index+1]])
-				print(str(index+1) + " iteration: " + repr(result))
-
-			if(not result):
-				print(False)
-				break
-
 
 def checkIfParamIdentifier(param):
 	if param in dictionary.keys():
 		return True
 
 	return False
+
+def processParamLogicOps(opsUsed, ifParamIdentifiers):
+	global dictionary
+
+	result = True
+
+	print("operator: " + str(opsUsed))
+
+	if(opsUsed == "AND"):
+		result = (dictionary[ifParamIdentifiers[0]] and dictionary[ifParamIdentifiers[0+1]])
+	elif(opsUsed == "OR"):
+		result = (dictionary[ifParamIdentifiers[0]] or dictionary[ifParamIdentifiers[0+1]])
+
+	return result

@@ -56,7 +56,8 @@ def isArithmeticOperator(token):
 	return token in arithmetic_operators
 
 def isIdentifier(token):
-	return re.match(identifierSyntax, token)
+	print(re.match("^"+identifierSyntax+"$", token))
+	# return re.match(identifierSyntax, token)
 
 def isInteger32(token):	
 	if(re.search("\.", token)):
@@ -189,7 +190,7 @@ def isBooleanExp(statement):
 	addtnBoolExp_opt			= "(\s?"+boolOps+"\s?"+allowedData+")*"
 	multiBoolExp				= "("+singleBoolExp+addtnBoolExp_opt+")"
 	regPattern					= "^("+multiBoolExp+")$"
-
+	print(re.match(regPattern,statement))
 	return re.match(regPattern,statement)
 
 def isBoolean(statement):
